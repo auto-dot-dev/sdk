@@ -74,11 +74,9 @@ Three external calls, all cacheable via the existing `request.swrFetch`:
 
 The existing `fetchUserWithApiKey` calls `auth.vin/api/users/me` with an API key. For the id.org.ai flow, we need to look up by email instead. Two approaches:
 
-**(A) auth.vin already has an endpoint for this** — check if `/api/users?email=X` or similar exists.
+auth.vin uses Payload CMS with MongoDB. Create a helper function that queries Payload's API to find a user by email (e.g., `GET /api/users?where[email][equals]=X`). This returns the same `UserAccount` shape with plan, role, etc.
 
-**(B) Add a simple endpoint** — `GET /api/users/by-email/:email` that returns the same `UserAccount` shape. This endpoint should be internal-only (authenticated via a service-to-service secret).
-
-**Needs verification:** Which approach is available in auth.vin. If neither exists, the middleware can fall back to treating the user as Free tier until the endpoint is added.
+If no auth.vin account exists for the email, the user gets Free tier access.
 
 ## Files
 
@@ -110,8 +108,8 @@ Test cases:
 7. Non-JWT Bearer token → skipped
 8. No Authorization header → skipped
 
-## Open Questions
+## Resolved Questions
 
-1. **auth.vin email lookup:** Does auth.vin have an endpoint to look up users by email? If not, we need to add one or use a different approach.
-2. **client_id validation:** Should we strictly validate `client_id === 'auto_dev_cli'`, or accept any id.org.ai JWT? Strict is safer.
-3. **Free tier fallback:** If a user authenticates via id.org.ai but has no auth.vin account, should they get Free tier access or be blocked?
+1. **auth.vin email lookup:** auth.vin uses Payload API — create a helper to find user by email via Payload's query API.
+2. **client_id validation:** Strict — `client_id === 'auto_dev_cli'`. This client_id is used for both CLI and MCP server (same OAuth client, two consumption modes).
+3. **Free tier fallback:** Users who authenticate via id.org.ai but have no auth.vin account get Free tier access.
