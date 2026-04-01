@@ -1,4 +1,4 @@
-import { ENDPOINTS } from './endpoints'
+import { ENDPOINTS, type EndpointDefinition } from './endpoints'
 import type { AutoDevClientOptions, AutoDevResponse } from './types'
 import { createAuthHeaders } from '../auth/api-key'
 import { AutoDevError, type AutoDevErrorCode } from '../errors'
@@ -10,6 +10,9 @@ interface RequestParams {
   vin?: string
   state?: string
   number?: string
+  downPayment?: string
+  loanTerm?: string
+  creditScore?: string
   query?: Record<string, string>
 }
 
@@ -25,7 +28,7 @@ export class AutoDevClient {
   }
 
   async request<T = unknown>(endpoint: string, params?: RequestParams): Promise<AutoDevResponse<T>> {
-    const definition = ENDPOINTS[endpoint]
+    const definition = (ENDPOINTS as Record<string, EndpointDefinition | undefined>)[endpoint]
     if (!definition) {
       throw new AutoDevError(400, 'INVALID_REQUEST', `Unknown endpoint: ${endpoint}`)
     }

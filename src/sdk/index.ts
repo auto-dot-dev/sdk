@@ -62,7 +62,8 @@ export class AutoDev {
   }
 
   async taxes(vin: string, options: TaxOptions): Promise<AutoDevResponse<unknown>> {
-    const query = { zip: options.zip }
+    const query: Record<string, string> = {}
+    if (options.zip !== undefined) query['zip'] = options.zip
     return this.client.request('taxes', { vin, query })
   }
 
