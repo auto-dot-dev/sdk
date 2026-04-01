@@ -1,0 +1,77 @@
+# @auto.dev/sdk
+
+SDK, MCP server, and CLI for the [auto.dev](https://auto.dev) automotive APIs.
+
+## Install
+
+```bash
+npm install @auto.dev/sdk
+```
+
+## SDK Usage
+
+```typescript
+import { AutoDev } from '@auto.dev/sdk'
+
+const auto = new AutoDev({ apiKey: 'ad_sk_...' })
+
+const vehicle = await auto.decode('1HGCM82633A004352')
+const photos = await auto.photos('1HGCM82633A004352')
+const listings = await auto.listings({ make: 'Toyota', year: 2024 })
+const specs = await auto.specs('1HGCM82633A004352')
+const payments = await auto.payments('1HGCM82633A004352', { downPayment: 5000 })
+```
+
+## CLI Usage
+
+```bash
+# Login
+auto login
+
+# Decode a VIN
+auto decode 1HGCM82633A004352
+
+# Search listings
+auto listings --make toyota --year 2024 --zip 90210
+
+# Discover available endpoints
+auto explore
+auto explore decode
+```
+
+## MCP Server
+
+Add to your MCP client config:
+
+```json
+{
+  "mcpServers": {
+    "auto-dev": {
+      "command": "npx",
+      "args": ["@auto.dev/sdk", "--mcp"],
+      "env": { "AUTODEV_API_KEY": "ad_sk_..." }
+    }
+  }
+}
+```
+
+## API Endpoints
+
+| Method | Tier | Description |
+|--------|------|-------------|
+| `decode(vin)` | Starter | Decode VIN → make, model, year, trim |
+| `photos(vin)` | Starter | Vehicle photos |
+| `listings(filters)` | Starter | Search listings |
+| `specs(vin)` | Growth | Vehicle specifications |
+| `build(vin)` | Growth | OEM build data |
+| `recalls(vin)` | Growth | Safety recalls |
+| `payments(vin, opts)` | Growth | Monthly payments |
+| `apr(vin, opts)` | Growth | Interest rates |
+| `tco(vin)` | Growth | Total cost of ownership |
+| `openRecalls(vin)` | Scale | Open recalls |
+| `plate(state, number)` | Scale | Plate → VIN |
+| `taxes(vin, opts)` | Scale | Taxes and fees |
+
+## License
+
+MIT
