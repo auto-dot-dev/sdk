@@ -189,33 +189,25 @@ export function createMcpServer(options: McpServerOptions): McpServer {
     version: '1.0.0',
   })
 
-  // auto_decode
-  server.tool(
-    'auto_decode',
-    ENDPOINTS.decode.description,
-    { vin: z.string().describe('Vehicle Identification Number') },
-    async ({ vin }) => {
-      const data = await client.request('decode', { vin })
-      return { content: [{ type: 'text', text: JSON.stringify(data) }] }
-    }
-  )
+  server.registerTool('auto_decode', {
+    description: ENDPOINTS.decode.description,
+    inputSchema: { vin: z.string().describe('Vehicle Identification Number') },
+  }, async ({ vin }) => {
+    const data = await client.request('decode', { vin })
+    return { content: [{ type: 'text', text: JSON.stringify(data) }] }
+  })
 
-  // auto_photos
-  server.tool(
-    'auto_photos',
-    ENDPOINTS.photos.description,
-    { vin: z.string().describe('Vehicle Identification Number') },
-    async ({ vin }) => {
-      const data = await client.request('photos', { vin })
-      return { content: [{ type: 'text', text: JSON.stringify(data) }] }
-    }
-  )
+  server.registerTool('auto_photos', {
+    description: ENDPOINTS.photos.description,
+    inputSchema: { vin: z.string().describe('Vehicle Identification Number') },
+  }, async ({ vin }) => {
+    const data = await client.request('photos', { vin })
+    return { content: [{ type: 'text', text: JSON.stringify(data) }] }
+  })
 
-  // auto_listings
-  server.tool(
-    'auto_listings',
-    ENDPOINTS.listings.description,
-    {
+  server.registerTool('auto_listings', {
+    description: ENDPOINTS.listings.description,
+    inputSchema: {
       make: z.string().optional().describe('Vehicle make'),
       model: z.string().optional().describe('Vehicle model'),
       year: z.string().optional().describe('Vehicle year'),
@@ -225,124 +217,96 @@ export function createMcpServer(options: McpServerOptions): McpServer {
       priceMax: z.string().optional().describe('Maximum price'),
       mileageMax: z.string().optional().describe('Maximum mileage'),
     },
-    async (args) => {
-      const data = await client.request('listings', args)
-      return { content: [{ type: 'text', text: JSON.stringify(data) }] }
-    }
-  )
+  }, async (args) => {
+    const data = await client.request('listings', { query: args as Record<string, string> })
+    return { content: [{ type: 'text', text: JSON.stringify(data) }] }
+  })
 
-  // auto_specs
-  server.tool(
-    'auto_specs',
-    ENDPOINTS.specs.description,
-    { vin: z.string().describe('Vehicle Identification Number') },
-    async ({ vin }) => {
-      const data = await client.request('specs', { vin })
-      return { content: [{ type: 'text', text: JSON.stringify(data) }] }
-    }
-  )
+  server.registerTool('auto_specs', {
+    description: ENDPOINTS.specs.description,
+    inputSchema: { vin: z.string().describe('Vehicle Identification Number') },
+  }, async ({ vin }) => {
+    const data = await client.request('specs', { vin })
+    return { content: [{ type: 'text', text: JSON.stringify(data) }] }
+  })
 
-  // auto_build
-  server.tool(
-    'auto_build',
-    ENDPOINTS.build.description,
-    { vin: z.string().describe('Vehicle Identification Number') },
-    async ({ vin }) => {
-      const data = await client.request('build', { vin })
-      return { content: [{ type: 'text', text: JSON.stringify(data) }] }
-    }
-  )
+  server.registerTool('auto_build', {
+    description: ENDPOINTS.build.description,
+    inputSchema: { vin: z.string().describe('Vehicle Identification Number') },
+  }, async ({ vin }) => {
+    const data = await client.request('build', { vin })
+    return { content: [{ type: 'text', text: JSON.stringify(data) }] }
+  })
 
-  // auto_recalls
-  server.tool(
-    'auto_recalls',
-    ENDPOINTS.recalls.description,
-    { vin: z.string().describe('Vehicle Identification Number') },
-    async ({ vin }) => {
-      const data = await client.request('recalls', { vin })
-      return { content: [{ type: 'text', text: JSON.stringify(data) }] }
-    }
-  )
+  server.registerTool('auto_recalls', {
+    description: ENDPOINTS.recalls.description,
+    inputSchema: { vin: z.string().describe('Vehicle Identification Number') },
+  }, async ({ vin }) => {
+    const data = await client.request('recalls', { vin })
+    return { content: [{ type: 'text', text: JSON.stringify(data) }] }
+  })
 
-  // auto_payments
-  server.tool(
-    'auto_payments',
-    ENDPOINTS.payments.description,
-    {
+  server.registerTool('auto_payments', {
+    description: ENDPOINTS.payments.description,
+    inputSchema: {
       vin: z.string().describe('Vehicle Identification Number'),
       downPayment: z.string().optional().describe('Down payment amount'),
       loanTerm: z.string().optional().describe('Loan term in months'),
       creditScore: z.string().optional().describe('Credit score'),
     },
-    async ({ vin, downPayment, loanTerm, creditScore }) => {
-      const data = await client.request('payments', { vin, downPayment, loanTerm, creditScore })
-      return { content: [{ type: 'text', text: JSON.stringify(data) }] }
-    }
-  )
+  }, async ({ vin, downPayment, loanTerm, creditScore }) => {
+    const data = await client.request('payments', { vin, downPayment, loanTerm, creditScore })
+    return { content: [{ type: 'text', text: JSON.stringify(data) }] }
+  })
 
-  // auto_apr
-  server.tool(
-    'auto_apr',
-    ENDPOINTS.apr.description,
-    {
+  server.registerTool('auto_apr', {
+    description: ENDPOINTS.apr.description,
+    inputSchema: {
       vin: z.string().describe('Vehicle Identification Number'),
       creditScore: z.string().optional().describe('Credit score'),
     },
-    async ({ vin, creditScore }) => {
-      const data = await client.request('apr', { vin, creditScore })
-      return { content: [{ type: 'text', text: JSON.stringify(data) }] }
-    }
-  )
+  }, async ({ vin, creditScore }) => {
+    const data = await client.request('apr', { vin, creditScore })
+    return { content: [{ type: 'text', text: JSON.stringify(data) }] }
+  })
 
-  // auto_tco
-  server.tool(
-    'auto_tco',
-    ENDPOINTS.tco.description,
-    { vin: z.string().describe('Vehicle Identification Number') },
-    async ({ vin }) => {
-      const data = await client.request('tco', { vin })
-      return { content: [{ type: 'text', text: JSON.stringify(data) }] }
-    }
-  )
+  server.registerTool('auto_tco', {
+    description: ENDPOINTS.tco.description,
+    inputSchema: { vin: z.string().describe('Vehicle Identification Number') },
+  }, async ({ vin }) => {
+    const data = await client.request('tco', { vin })
+    return { content: [{ type: 'text', text: JSON.stringify(data) }] }
+  })
 
-  // auto_open_recalls
-  server.tool(
-    'auto_open_recalls',
-    ENDPOINTS.openRecalls.description,
-    { vin: z.string().describe('Vehicle Identification Number') },
-    async ({ vin }) => {
-      const data = await client.request('openRecalls', { vin })
-      return { content: [{ type: 'text', text: JSON.stringify(data) }] }
-    }
-  )
+  server.registerTool('auto_open_recalls', {
+    description: ENDPOINTS.openRecalls.description,
+    inputSchema: { vin: z.string().describe('Vehicle Identification Number') },
+  }, async ({ vin }) => {
+    const data = await client.request('openRecalls', { vin })
+    return { content: [{ type: 'text', text: JSON.stringify(data) }] }
+  })
 
-  // auto_plate
-  server.tool(
-    'auto_plate',
-    ENDPOINTS.plate.description,
-    {
+  server.registerTool('auto_plate', {
+    description: ENDPOINTS.plate.description,
+    inputSchema: {
       state: z.string().describe('Two-letter state abbreviation'),
       number: z.string().describe('License plate number'),
     },
-    async ({ state, number }) => {
-      const data = await client.request('plate', { state, number })
-      return { content: [{ type: 'text', text: JSON.stringify(data) }] }
-    }
-  )
+  }, async ({ state, number }) => {
+    const data = await client.request('plate', { state, number })
+    return { content: [{ type: 'text', text: JSON.stringify(data) }] }
+  })
 
-  // auto_taxes
-  server.tool(
-    'auto_taxes',
-    ENDPOINTS.taxes.description,
-    {
+  server.registerTool('auto_taxes', {
+    description: ENDPOINTS.taxes.description,
+    inputSchema: {
       vin: z.string().describe('Vehicle Identification Number'),
       zip: z.string().describe('ZIP code for tax calculation'),
     },
-    async ({ vin, zip }) => {
-      const data = await client.request('taxes', { vin, zip })
-      return { content: [{ type: 'text', text: JSON.stringify(data) }] }
-    }
-  )
+  }, async ({ vin, zip }) => {
+    const data = await client.request('taxes', { vin, query: { zip } })
+    return { content: [{ type: 'text', text: JSON.stringify(data) }] }
+  })
 
   return server
 }
