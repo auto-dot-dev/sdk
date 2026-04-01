@@ -1,6 +1,6 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'fs'
-import { join } from 'path'
-import { homedir } from 'os'
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { homedir } from 'node:os'
+import { join } from 'node:path'
 
 const DEFAULT_CONFIG_DIR = join(homedir(), '.config', 'auto-dev')
 

@@ -7,7 +7,7 @@ export interface EndpointDefinition {
   vinRequired: boolean
 }
 
-export const ENDPOINTS: Record<string, EndpointDefinition> = {
+export const ENDPOINTS = {
   decode: {
     name: 'decode',
     method: 'GET',
@@ -112,4 +112,4 @@ export const ENDPOINTS: Record<string, EndpointDefinition> = {
     description: 'Get account usage statistics',
     vinRequired: false,
   },
-} as const
+} satisfies Record<string, EndpointDefinition>

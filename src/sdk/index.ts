@@ -1,5 +1,5 @@
 import { AutoDevClient } from '../core/client'
-import type { AutoDevClientOptions, AutoDevResponse, ListingsFilters, PaymentOptions, AprOptions, TaxOptions } from '../core/types'
+import type { AprOptions, AutoDevClientOptions, AutoDevResponse, ListingsFilters, PaymentOptions, TaxOptions } from '../core/types'
 
 export class AutoDev {
   private readonly client: AutoDevClient

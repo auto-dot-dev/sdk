@@ -162,21 +162,6 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
   },
 ]
 
-const TOOL_TO_ENDPOINT: Record<string, string> = {
-  auto_decode: 'decode',
-  auto_photos: 'photos',
-  auto_listings: 'listings',
-  auto_specs: 'specs',
-  auto_build: 'build',
-  auto_recalls: 'recalls',
-  auto_payments: 'payments',
-  auto_apr: 'apr',
-  auto_tco: 'tco',
-  auto_open_recalls: 'openRecalls',
-  auto_plate: 'plate',
-  auto_taxes: 'taxes',
-}
-
 export interface McpServerOptions {
   apiKey: string
   baseUrl?: string
