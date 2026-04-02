@@ -12,9 +12,39 @@ import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
-const DOCS_PATH = process.argv[2]
-  ?? process.env.DOCS_PATH
-  ?? join(__dirname, '..', '..', 'docs.auto.dev')
+function findDocsPath(): string {
+  // 1. CLI arg
+  if (process.argv[2]) return process.argv[2]
+
+  // 2. Env var
+  if (process.env.DOCS_PATH) return process.env.DOCS_PATH
+
+  // 3. Load from .env file if present
+  const envFile = join(__dirname, '..', '.env')
+  if (existsSync(envFile)) {
+    const envContent = readFileSync(envFile, 'utf-8')
+    const match = envContent.match(/^DOCS_PATH=(.+)$/m)
+    if (match) return match[1].trim().replace(/^["']|["']$/g, '')
+  }
+
+  // 4. Check common sibling locations
+  const candidates = [
+    join(__dirname, '..', '..', 'docs.auto.dev'),
+    join(__dirname, '..', '..', 'AUTO_DEV-API', 'docs.auto.dev'),
+    join(__dirname, '..', '..', '..', 'docs.auto.dev'),
+    join(__dirname, '..', '..', '..', 'AUTO_DEV-API', 'docs.auto.dev'),
+  ]
+
+  for (const candidate of candidates) {
+    if (existsSync(join(candidate, 'content', 'docs', 'v2', 'products'))) {
+      return candidate
+    }
+  }
+
+  return candidates[0]
+}
+
+const DOCS_PATH = findDocsPath()
 
 const PRODUCTS_DIR = join(DOCS_PATH, 'content', 'docs', 'v2', 'products')
 const OUTPUT_DIR = join(__dirname, '..', 'dist', 'docs')
