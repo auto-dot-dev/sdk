@@ -1,6 +1,13 @@
+import { exec } from 'node:child_process'
+import { platform } from 'node:os'
 import { Command } from 'commander'
 import { requestDeviceCode, pollForToken, saveCredentials, clearCredentials, loadCredentials } from '../auth/oauth'
 import { DEFAULT_AUTH_CONFIG } from '../auth/config'
+
+function openBrowser(url: string): void {
+  const cmd = platform() === 'darwin' ? 'open' : platform() === 'win32' ? 'start' : 'xdg-open'
+  exec(`${cmd} "${url}"`)
+}
 
 export function buildLoginCommand(): Command {
   const cmd = new Command('login')
@@ -20,8 +27,11 @@ export function buildLoginCommand(): Command {
 
       try {
         const deviceCode = await requestDeviceCode(config)
-        console.log(`\nVisit: ${deviceCode.verification_uri}`)
+        const verifyUrl = `${deviceCode.verification_uri}?user_code=${deviceCode.user_code}`
+        console.log(`\nOpening browser to: ${verifyUrl}`)
+        console.log(`If it doesn't open, visit: ${deviceCode.verification_uri}`)
         console.log(`Enter code: ${deviceCode.user_code}\n`)
+        openBrowser(verifyUrl)
         console.log('Waiting for authorization...')
 
         const token = await pollForToken({
