@@ -74,7 +74,7 @@ if (process.argv.includes('--mcp')) {
         return
       }
 
-      console.log(results[0].content)
+      console.log(results[0]!.content)
       if (results.length > 1) {
         console.log(`\nAlso related: ${results.slice(1).map((r) => r.name).join(', ')}`)
       }

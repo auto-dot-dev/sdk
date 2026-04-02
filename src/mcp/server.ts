@@ -391,7 +391,7 @@ export function createMcpServer(options: McpServerOptions): McpServer {
       return { content: [{ type: 'text', text: `No docs found for "${query}". Available: ${available}` }] }
     }
 
-    const top = results[0]
+    const top = results[0]!
     const others = results.slice(1).map((r) => r.name).join(', ')
     let text = top.content
     if (others) {
