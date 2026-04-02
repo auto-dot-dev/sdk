@@ -1,99 +1,66 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { requestDeviceCode, pollForToken, loadCredentials, saveCredentials, clearCredentials } from '../../src/auth/oauth'
-import { existsSync, mkdirSync, writeFileSync, rmSync } from 'fs'
-import { join } from 'path'
-import { tmpdir } from 'os'
+import { describe, it, expect, vi } from 'vitest'
+import { authorizeDevice, pollForTokens, saveTokenData, saveApiKey, loadToken, clearCredentials, getValidToken, createStorage } from '../../src/auth/oauth'
 
-describe('OAuth Device Flow', () => {
-  it('requestDeviceCode calls POST /oauth/device', async () => {
-    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({
-          device_code: 'dev_123',
-          user_code: 'ABCD-1234',
-          verification_uri: 'https://id.org.ai/device',
-          expires_in: 600,
-          interval: 5,
-        }),
-        { status: 200, headers: { 'content-type': 'application/json' } },
-      ),
-    )
-
-    const result = await requestDeviceCode({ idOrgAiUrl: 'https://id.org.ai', clientId: 'auto_dev_cli' })
-
-    expect(result.device_code).toBe('dev_123')
-    expect(result.user_code).toBe('ABCD-1234')
-    expect(result.verification_uri).toBe('https://id.org.ai/device')
-
-    const [url, init] = fetchSpy.mock.calls[0]
-    expect(url).toBe('https://id.org.ai/oauth/device')
-    expect(init?.method).toBe('POST')
-
-    fetchSpy.mockRestore()
+describe('OAuth module re-exports', () => {
+  it('exports authorizeDevice from id.org.ai', () => {
+    expect(typeof authorizeDevice).toBe('function')
   })
 
-  it('pollForToken retries on authorization_pending', async () => {
-    const fetchSpy = vi
-      .spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ error: 'authorization_pending' }), {
-          status: 400,
-          headers: { 'content-type': 'application/json' },
-        }),
-      )
-      .mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({
-            access_token: 'at_123',
-            refresh_token: 'rt_456',
-            token_type: 'Bearer',
-            expires_in: 3600,
-          }),
-          { status: 200, headers: { 'content-type': 'application/json' } },
-        ),
-      )
+  it('exports pollForTokens from id.org.ai', () => {
+    expect(typeof pollForTokens).toBe('function')
+  })
 
-    const result = await pollForToken({
-      idOrgAiUrl: 'https://id.org.ai',
-      clientId: 'auto_dev_cli',
-      deviceCode: 'dev_123',
-      interval: 0.01,
-      expiresIn: 600,
-    })
+  it('exports getValidToken', () => {
+    expect(typeof getValidToken).toBe('function')
+  })
 
-    expect(result.access_token).toBe('at_123')
-    expect(result.refresh_token).toBe('rt_456')
-    expect(fetchSpy).toHaveBeenCalledTimes(2)
+  it('exports saveTokenData', () => {
+    expect(typeof saveTokenData).toBe('function')
+  })
 
-    fetchSpy.mockRestore()
+  it('exports saveApiKey', () => {
+    expect(typeof saveApiKey).toBe('function')
+  })
+
+  it('exports loadToken', () => {
+    expect(typeof loadToken).toBe('function')
+  })
+
+  it('exports clearCredentials', () => {
+    expect(typeof clearCredentials).toBe('function')
+  })
+
+  it('exports createStorage from id.org.ai', () => {
+    expect(typeof createStorage).toBe('function')
   })
 })
 
-describe('Credential Storage', () => {
-  const testDir = join(tmpdir(), 'auto-dev-test-' + Date.now())
-
-  beforeEach(() => {
-    if (existsSync(testDir)) rmSync(testDir, { recursive: true })
+describe('Token Storage via id.org.ai', () => {
+  it('createStorage returns a TokenStorage instance', () => {
+    const storage = createStorage('/tmp/auto-dev-test-' + Date.now())
+    expect(typeof storage.getToken).toBe('function')
+    expect(typeof storage.setToken).toBe('function')
+    expect(typeof storage.removeToken).toBe('function')
+    expect(typeof storage.getTokenData).toBe('function')
+    expect(typeof storage.setTokenData).toBe('function')
   })
 
-  it('saves and loads credentials', () => {
-    const creds = { accessToken: 'at_123', refreshToken: 'rt_456', org: 'acme' }
-    saveCredentials(creds, testDir)
+  it('saves and loads token data', async () => {
+    const testPath = '/tmp/auto-dev-test-' + Date.now()
+    const storage = createStorage(testPath)
 
-    const loaded = loadCredentials(testDir)
-    expect(loaded).toEqual(creds)
+    await storage.setTokenData({ accessToken: 'at_123', refreshToken: 'rt_456' })
+    const loaded = await storage.getTokenData()
+
+    expect(loaded?.accessToken).toBe('at_123')
+    expect(loaded?.refreshToken).toBe('rt_456')
+
+    await storage.removeToken()
   })
 
-  it('returns null when no credentials exist', () => {
-    const loaded = loadCredentials(testDir)
-    expect(loaded).toBeNull()
-  })
-
-  it('clears credentials', () => {
-    saveCredentials({ accessToken: 'at_123', refreshToken: 'rt_456' }, testDir)
-    clearCredentials(testDir)
-
-    const loaded = loadCredentials(testDir)
-    expect(loaded).toBeNull()
+  it('returns null when no token exists', async () => {
+    const storage = createStorage('/tmp/auto-dev-test-empty-' + Date.now())
+    const token = await storage.getToken()
+    expect(token).toBeNull()
   })
 })

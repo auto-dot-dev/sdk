@@ -1,111 +1,61 @@
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-import { homedir } from 'node:os'
-import { join } from 'node:path'
+/**
+ * OAuth device flow and credential storage — delegates to id.org.ai CLI SDK.
+ */
 
-const DEFAULT_CONFIG_DIR = join(homedir(), '.config', 'auto-dev')
+import { authorizeDevice, pollForTokens } from 'id.org.ai/cli/device'
+import { ensureValidToken, logout, getUser } from 'id.org.ai/cli/auth'
+import { createStorage } from 'id.org.ai/cli/storage'
+import type { TokenStorage, StoredTokenData } from 'id.org.ai/cli/storage'
+import type { DeviceAuthorizationResponse, TokenResponse } from 'id.org.ai/cli/device'
 
-export interface DeviceCodeResponse {
-  device_code: string
-  user_code: string
-  verification_uri: string
-  expires_in: number
-  interval: number
+export type { DeviceAuthorizationResponse, TokenResponse }
+export type { TokenStorage, StoredTokenData }
+
+// Use id.org.ai's secure file storage (~/.id.org.ai/token)
+const storage = createStorage()
+
+export { authorizeDevice, pollForTokens, ensureValidToken, logout, getUser, createStorage }
+
+/**
+ * Get a valid access token, auto-refreshing if needed.
+ * Returns null if not authenticated.
+ */
+export async function getValidToken(): Promise<string | null> {
+  return ensureValidToken(storage)
 }
 
-export interface TokenResponse {
-  access_token: string
-  refresh_token?: string
-  token_type: string
-  expires_in: number
-}
-
-export interface Credentials {
-  accessToken: string
-  refreshToken?: string
-  org?: string
-}
-
-export async function requestDeviceCode(config: { idOrgAiUrl: string; clientId: string }): Promise<DeviceCodeResponse> {
-  const response = await fetch(`${config.idOrgAiUrl}/oauth/device`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      client_id: config.clientId,
-      scope: 'openid profile email',
-    }),
+/**
+ * Save token data after device flow login.
+ */
+export async function saveTokenData(data: { access_token: string; refresh_token?: string; expires_in?: number }): Promise<void> {
+  await storage.setTokenData({
+    accessToken: data.access_token,
+    refreshToken: data.refresh_token,
+    expiresAt: data.expires_in ? Date.now() + data.expires_in * 1000 : undefined,
   })
-
-  if (!response.ok) {
-    const body = await response.json().catch(() => ({ error: response.statusText }))
-    throw new Error(`Device code request failed: ${(body as { error?: string }).error ?? response.statusText}`)
-  }
-
-  return response.json() as Promise<DeviceCodeResponse>
 }
 
-export async function pollForToken(config: {
-  idOrgAiUrl: string
-  clientId: string
-  deviceCode: string
-  interval: number
-  expiresIn: number
-}): Promise<TokenResponse> {
-  const deadline = Date.now() + config.expiresIn * 1000
-
-  while (Date.now() < deadline) {
-    const response = await fetch(`${config.idOrgAiUrl}/oauth/token`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
-        client_id: config.clientId,
-        device_code: config.deviceCode,
-      }),
-    })
-
-    if (response.ok) {
-      return response.json() as Promise<TokenResponse>
-    }
-
-    const body = (await response.json().catch(() => ({ error: 'unknown' }))) as { error?: string }
-
-    if (body.error === 'authorization_pending') {
-      await new Promise((resolve) => setTimeout(resolve, config.interval * 1000))
-      continue
-    }
-
-    if (body.error === 'slow_down') {
-      await new Promise((resolve) => setTimeout(resolve, (config.interval + 5) * 1000))
-      continue
-    }
-
-    throw new Error(`Token request failed: ${body.error}`)
-  }
-
-  throw new Error('Device code expired. Please try logging in again.')
+/**
+ * Save an API key directly (for --api-key flag).
+ */
+export async function saveApiKey(apiKey: string): Promise<void> {
+  await storage.setTokenData({ accessToken: apiKey })
 }
 
-export function saveCredentials(credentials: Credentials, configDir: string = DEFAULT_CONFIG_DIR): void {
-  if (!existsSync(configDir)) {
-    mkdirSync(configDir, { recursive: true })
-  }
-  writeFileSync(join(configDir, 'credentials.json'), JSON.stringify(credentials, null, 2), 'utf-8')
+/**
+ * Load the current access token (without refresh).
+ */
+export async function loadToken(): Promise<string | null> {
+  return storage.getToken()
 }
 
-export function loadCredentials(configDir: string = DEFAULT_CONFIG_DIR): Credentials | null {
-  const path = join(configDir, 'credentials.json')
-  if (!existsSync(path)) return null
-
-  try {
-    return JSON.parse(readFileSync(path, 'utf-8')) as Credentials
-  } catch {
-    return null
+/**
+ * Clear stored credentials and revoke tokens server-side.
+ */
+export async function clearCredentials(): Promise<void> {
+  const tokenData = await storage.getTokenData()
+  if (tokenData?.accessToken) {
+    await logout(tokenData.accessToken, tokenData.refreshToken)
   }
-}
-
-export function clearCredentials(configDir: string = DEFAULT_CONFIG_DIR): void {
-  const path = join(configDir, 'credentials.json')
-  if (existsSync(path)) {
-    rmSync(path)
-  }
+  await storage.removeToken()
 }

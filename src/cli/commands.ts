@@ -1,13 +1,13 @@
 import { Command } from 'commander'
-import { loadCredentials } from '../auth/oauth'
+import { getValidToken } from '../auth/oauth'
 
 const BASE_URL = process.env.AUTODEV_BASE_URL ?? 'https://api.auto.dev'
 
-function getApiKey(options: Record<string, string>): string {
+async function getApiKey(options: Record<string, string>): Promise<string> {
   const apiKey =
     options.apiKey ??
     process.env.AUTODEV_API_KEY ??
-    loadCredentials()?.accessToken
+    await getValidToken()
 
   if (!apiKey) {
     console.error('No API key found. Set AUTODEV_API_KEY or run: auto login')

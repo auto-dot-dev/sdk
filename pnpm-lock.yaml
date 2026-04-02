@@ -15,8 +15,8 @@ importers:
         specifier: ^14.0.3
         version: 14.0.3
       id.org.ai:
-        specifier: ^0.2.1
-        version: 0.2.1(express@5.2.1)
+        specifier: ^0.2.2
+        version: 0.2.2(express@5.2.1)
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -870,8 +870,8 @@ packages:
     resolution: {integrity: sha512-im9DjEDQ55s9fL4EYzOAv0yMqmMBSZp6G0VvFyTMPKWxiSBHUj9NW/qqLmXUwXrrM7AvqSlTCfvqRb0cM8yYqw==}
     engines: {node: '>=0.10.0'}
 
-  id.org.ai@0.2.1:
-    resolution: {integrity: sha512-o823ESy64PKomLTzjqaWKaOsKC2aySx0C1Nh+U2jTaBAOE360Mr//QuxHGFHz1QHG8DsGFcMLdmacw+LbG8xDQ==}
+  id.org.ai@0.2.2:
+    resolution: {integrity: sha512-YiZ/CjS+4aHeTPqcrycgXCwde+Y9O5gabRxJfgv+DaniFF86U7KSo5M+JjJdvygoxahl3uEVwm94EdMg0XP76A==}
     hasBin: true
 
   ieee754@1.2.1:
@@ -2215,7 +2215,7 @@ snapshots:
     dependencies:
       safer-buffer: 2.1.2
 
-  id.org.ai@0.2.1(express@5.2.1):
+  id.org.ai@0.2.2(express@5.2.1):
     dependencies:
       '@workos-inc/node': 7.82.0(express@5.2.1)
       hono: 4.12.9

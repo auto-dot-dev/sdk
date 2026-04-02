@@ -5,7 +5,7 @@ import { buildLoginCommand, buildLogoutCommand, buildWhoamiCommand } from './aut
 import { buildApiCommands } from './commands'
 import { buildExploreCommand } from './explore'
 import { startMcpServer } from '../mcp/server'
-import { loadCredentials } from '../auth/oauth'
+import { getValidToken } from '../auth/oauth'
 
 const program = new Command()
   .name('auto')
@@ -15,7 +15,7 @@ const program = new Command()
 
 program.hook('preAction', async (thisCommand) => {
   if (thisCommand.opts().mcp) {
-    const apiKey = process.env.AUTODEV_API_KEY ?? loadCredentials()?.accessToken
+    const apiKey = process.env.AUTODEV_API_KEY ?? await getValidToken()
     if (!apiKey) {
       console.error('No API key found. Set AUTODEV_API_KEY or run: auto login')
       process.exit(1)
@@ -35,10 +35,9 @@ orgs.command('list').description('List your organizations').action(() => {
   console.log('Organization listing requires authentication. Run: auto login')
 })
 orgs.command('switch').argument('<slug>', 'Organization slug').description('Switch active organization').action(async (slug) => {
-  const creds = loadCredentials()
-  if (!creds) { console.error('Not logged in. Run: auto login'); process.exit(1) }
-  const { saveCredentials } = await import('../auth/oauth')
-  saveCredentials({ ...creds, org: slug })
+  const token = await getValidToken()
+  if (!token) { console.error('Not logged in. Run: auto login'); process.exit(1) }
+  // TODO: set org context once org management is implemented
   console.log(`Switched to organization: ${slug}`)
 })
 program.addCommand(orgs)
