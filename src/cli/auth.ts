@@ -62,7 +62,16 @@ export function buildWhoamiCommand(): Command {
         console.log('Not logged in. Run: auto login')
         return
       }
-      console.log('Authenticated')
+      const { getUser } = await import('../auth/oauth')
+      const { user } = await getUser(token)
+      if (user) {
+        console.log(`Email: ${user.email ?? 'unknown'}`)
+        console.log(`Name:  ${user.name ?? 'unknown'}`)
+        console.log(`ID:    ${user.id}`)
+        if (user.organizationId) console.log(`Org:   ${user.organizationId}`)
+      } else {
+        console.log('Authenticated (could not fetch user info)')
+      }
     })
 
   return cmd

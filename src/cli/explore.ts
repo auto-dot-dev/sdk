@@ -109,12 +109,12 @@ export function getEndpointDetail(name: string): EndpointDetail | null {
 export function buildExploreCommand(): Command {
   const cmd = new Command('explore')
     .description('Explore available auto.dev API endpoints')
+    .argument('[endpoint]', 'Specific endpoint to inspect')
     .option('--plan <tier>', 'Filter by plan tier (starter, growth, scale, auth)')
-    .option('--detail <name>', 'Show full detail for a specific endpoint')
     .option('--json', 'Output as JSON')
-    .action((options) => {
-      if (options.detail) {
-        const detail = getEndpointDetail(options.detail)
+    .action((endpoint, options) => {
+      if (endpoint) {
+        const detail = getEndpointDetail(endpoint)
         if (!detail) {
           console.error(`Unknown endpoint: ${options.detail}`)
           process.exit(1)

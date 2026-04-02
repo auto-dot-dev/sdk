@@ -19,6 +19,10 @@ async function getApiKey(options: Record<string, string>): Promise<string> {
 
 async function apiGet(path: string, apiKey: string): Promise<unknown> {
   const url = `${BASE_URL}${path}`
+  if (process.env.DEBUG) {
+    console.error(`[DEBUG] GET ${url}`)
+    console.error(`[DEBUG] Token: ${apiKey.substring(0, 10)}...${apiKey.substring(apiKey.length - 5)}`)
+  }
   const response = await fetch(url, {
     headers: {
       Authorization: `Bearer ${apiKey}`,
@@ -95,7 +99,7 @@ export function buildApiCommands(): Command[] {
       .description('Decode a VIN — returns make, model, year, trim, engine, drivetrain')
       .argument('<vin>', 'Vehicle Identification Number'),
   ).action(async (vin, options) => {
-    const apiKey = getApiKey(options)
+    const apiKey = await getApiKey(options)
     const data = await apiGet(`/vin/${vin}`, apiKey)
     console.log(formatOutput(data, getFormat(options)))
   })
@@ -107,7 +111,7 @@ export function buildApiCommands(): Command[] {
       .description('Get vehicle photos by VIN')
       .argument('<vin>', 'Vehicle Identification Number'),
   ).action(async (vin, options) => {
-    const apiKey = getApiKey(options)
+    const apiKey = await getApiKey(options)
     const data = await apiGet(`/photos/${vin}`, apiKey)
     console.log(formatOutput(data, getFormat(options)))
   })
@@ -125,7 +129,7 @@ export function buildApiCommands(): Command[] {
     .option('--price-max <price>', 'Maximum price')
     .option('--miles-max <miles>', 'Maximum mileage')
     .action(async (options) => {
-      const apiKey = getApiKey(options)
+      const apiKey = await getApiKey(options)
       const params = new URLSearchParams()
       if (options.make) params.set('make', options.make)
       if (options.model) params.set('model', options.model)
@@ -145,7 +149,7 @@ export function buildApiCommands(): Command[] {
       .description('Get detailed vehicle specifications by VIN')
       .argument('<vin>', 'Vehicle Identification Number'),
   ).action(async (vin, options) => {
-    const apiKey = getApiKey(options)
+    const apiKey = await getApiKey(options)
     const data = await apiGet(`/specs/${vin}`, apiKey)
     console.log(formatOutput(data, getFormat(options)))
   })
@@ -157,7 +161,7 @@ export function buildApiCommands(): Command[] {
       .description('Get OEM build and trim data by VIN')
       .argument('<vin>', 'Vehicle Identification Number'),
   ).action(async (vin, options) => {
-    const apiKey = getApiKey(options)
+    const apiKey = await getApiKey(options)
     const data = await apiGet(`/build/${vin}`, apiKey)
     console.log(formatOutput(data, getFormat(options)))
   })
@@ -169,7 +173,7 @@ export function buildApiCommands(): Command[] {
       .description('Get safety recalls by VIN')
       .argument('<vin>', 'Vehicle Identification Number'),
   ).action(async (vin, options) => {
-    const apiKey = getApiKey(options)
+    const apiKey = await getApiKey(options)
     const data = await apiGet(`/recalls/${vin}`, apiKey)
     console.log(formatOutput(data, getFormat(options)))
   })
@@ -185,7 +189,7 @@ export function buildApiCommands(): Command[] {
     .option('--term <months>', 'Loan term in months')
     .option('--credit-score <score>', 'Credit score')
     .action(async (vin, options) => {
-      const apiKey = getApiKey(options)
+      const apiKey = await getApiKey(options)
       const params = new URLSearchParams()
       if (options.down) params.set('down', options.down)
       if (options.term) params.set('term', options.term)
@@ -204,7 +208,7 @@ export function buildApiCommands(): Command[] {
   )
     .option('--credit-score <score>', 'Credit score')
     .action(async (vin, options) => {
-      const apiKey = getApiKey(options)
+      const apiKey = await getApiKey(options)
       const params = new URLSearchParams()
       if (options.creditScore) params.set('credit_score', options.creditScore)
       const query = params.toString() ? `?${params.toString()}` : ''
@@ -219,7 +223,7 @@ export function buildApiCommands(): Command[] {
       .description('Calculate total cost of ownership by VIN')
       .argument('<vin>', 'Vehicle Identification Number'),
   ).action(async (vin, options) => {
-    const apiKey = getApiKey(options)
+    const apiKey = await getApiKey(options)
     const data = await apiGet(`/tco/${vin}`, apiKey)
     console.log(formatOutput(data, getFormat(options)))
   })
@@ -231,7 +235,7 @@ export function buildApiCommands(): Command[] {
       .description('Get open/unresolved recalls by VIN')
       .argument('<vin>', 'Vehicle Identification Number'),
   ).action(async (vin, options) => {
-    const apiKey = getApiKey(options)
+    const apiKey = await getApiKey(options)
     const data = await apiGet(`/openrecalls/${vin}`, apiKey)
     console.log(formatOutput(data, getFormat(options)))
   })
@@ -244,7 +248,7 @@ export function buildApiCommands(): Command[] {
       .argument('<state>', 'Two-letter state abbreviation')
       .argument('<number>', 'License plate number'),
   ).action(async (state, number, options) => {
-    const apiKey = getApiKey(options)
+    const apiKey = await getApiKey(options)
     const data = await apiGet(`/plate/${state}/${number}`, apiKey)
     console.log(formatOutput(data, getFormat(options)))
   })
@@ -258,7 +262,7 @@ export function buildApiCommands(): Command[] {
   )
     .option('--zip <zip>', 'ZIP code for tax jurisdiction')
     .action(async (vin, options) => {
-      const apiKey = getApiKey(options)
+      const apiKey = await getApiKey(options)
       const params = new URLSearchParams()
       if (options.zip) params.set('zip', options.zip)
       const query = params.toString() ? `?${params.toString()}` : ''
