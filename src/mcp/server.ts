@@ -3,6 +3,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod'
 import { AutoDevClient } from '../core/client.js'
 import { ENDPOINTS } from '../core/endpoints.js'
+import { searchDocs, getDoc, listDocs } from '../docs/search.js'
 
 export interface ToolDefinition {
   name: string
@@ -178,6 +179,17 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
         months: { type: 'string', description: 'Loan term in months (default 72)' },
       },
       required: ['vin'],
+    },
+  },
+  {
+    name: 'auto_docs',
+    description: 'Search auto.dev API documentation. Returns relevant docs for a query or specific endpoint name.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'Search query or endpoint name (e.g. "listings", "payments", "VIN decode")' },
+      },
+      required: ['query'],
     },
   },
 ]
@@ -360,6 +372,32 @@ export function createMcpServer(options: McpServerOptions): McpServer {
     }
     const data = await client.request('taxes', { vin, query })
     return { content: [{ type: 'text', text: JSON.stringify(data) }] }
+  })
+
+  server.registerTool('auto_docs', {
+    description: 'Search auto.dev API documentation. Returns relevant docs for a query or specific endpoint name.',
+    inputSchema: {
+      query: z.string().describe('Search query or endpoint name (e.g. "listings", "payments", "VIN decode")'),
+    },
+  }, async ({ query }) => {
+    const exact = getDoc(query)
+    if (exact) {
+      return { content: [{ type: 'text', text: exact }] }
+    }
+
+    const results = searchDocs(query)
+    if (results.length === 0) {
+      const available = listDocs().join(', ')
+      return { content: [{ type: 'text', text: `No docs found for "${query}". Available: ${available}` }] }
+    }
+
+    const top = results[0]
+    const others = results.slice(1).map((r) => r.name).join(', ')
+    let text = top.content
+    if (others) {
+      text += `\n\n---\nAlso related: ${others}`
+    }
+    return { content: [{ type: 'text', text }] }
   })
 
   return server

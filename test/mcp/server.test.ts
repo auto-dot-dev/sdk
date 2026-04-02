@@ -6,8 +6,8 @@ describe('MCP Server', () => {
     expect(typeof createMcpServer).toBe('function')
   })
 
-  it('defines 12 tools', () => {
-    expect(TOOL_DEFINITIONS).toHaveLength(12)
+  it('defines 13 tools (12 endpoints + auto_docs)', () => {
+    expect(TOOL_DEFINITIONS).toHaveLength(13)
   })
 
   it('all tools have name, description, and inputSchema', () => {
@@ -32,6 +32,12 @@ describe('MCP Server', () => {
     expect(names).toContain('auto_open_recalls')
     expect(names).toContain('auto_plate')
     expect(names).toContain('auto_taxes')
+  })
+
+  it('auto_docs tool requires query param', () => {
+    const docs = TOOL_DEFINITIONS.find((t) => t.name === 'auto_docs')!
+    expect(docs).toBeDefined()
+    expect(docs.inputSchema.required).toContain('query')
   })
 
   it('auto_decode tool requires vin param', () => {

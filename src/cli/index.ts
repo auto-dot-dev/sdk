@@ -7,6 +7,7 @@ import { buildExploreCommand } from './explore'
 import { buildMcpCommand } from './mcp-install'
 import { startMcpServer } from '../mcp/server'
 import { getValidToken } from '../auth/oauth'
+import { listDocs, getDoc, searchDocs } from '../docs/search.js'
 
 const program = new Command()
   .name('auto')
@@ -42,6 +43,44 @@ if (process.argv.includes('--mcp')) {
     console.log(`Switched to organization: ${slug}`)
   })
   program.addCommand(orgs)
+
+  const docs = new Command('docs')
+    .description('Browse auto.dev API documentation')
+    .argument('[query]', 'Endpoint name or search query')
+    .action((query) => {
+      if (!query) {
+        const available = listDocs()
+        if (available.length === 0) {
+          console.log('No bundled docs found. Run: npm run build:docs')
+          return
+        }
+        console.log('Available documentation:\n')
+        for (const name of available) {
+          console.log(`  auto docs ${name}`)
+        }
+        return
+      }
+
+      const doc = getDoc(query)
+      if (doc) {
+        console.log(doc)
+        return
+      }
+
+      const results = searchDocs(query)
+      if (results.length === 0) {
+        console.log(`No docs found for "${query}".`)
+        console.log('Available: ' + listDocs().join(', '))
+        return
+      }
+
+      console.log(results[0].content)
+      if (results.length > 1) {
+        console.log(`\nAlso related: ${results.slice(1).map((r) => r.name).join(', ')}`)
+      }
+    })
+
+  program.addCommand(docs)
 
   for (const cmd of buildApiCommands()) {
     program.addCommand(cmd)
