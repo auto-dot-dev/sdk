@@ -43,14 +43,17 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     inputSchema: {
       type: 'object',
       properties: {
-        make: { type: 'string', description: 'Vehicle make (e.g. Toyota)' },
-        model: { type: 'string', description: 'Vehicle model (e.g. Camry)' },
-        year: { type: 'string', description: 'Vehicle year' },
-        zip: { type: 'string', description: 'ZIP code for search area' },
-        radius: { type: 'string', description: 'Search radius in miles' },
-        priceMin: { type: 'string', description: 'Minimum price' },
-        priceMax: { type: 'string', description: 'Maximum price' },
-        mileageMax: { type: 'string', description: 'Maximum mileage' },
+        make: { type: 'string', description: 'Vehicle manufacturer (maps to vehicle.make)' },
+        model: { type: 'string', description: 'Vehicle model (maps to vehicle.model)' },
+        year: { type: 'string', description: 'Year or range, e.g. 2018-2020 (maps to vehicle.year)' },
+        trim: { type: 'string', description: 'Trim level (maps to vehicle.trim)' },
+        bodyStyle: { type: 'string', description: 'Body style, e.g. sedan, coupe (maps to vehicle.bodyStyle)' },
+        price: { type: 'string', description: 'Price range, e.g. 10000-30000 (maps to retailListing.price)' },
+        miles: { type: 'string', description: 'Mileage range, e.g. 0-50000 (maps to retailListing.miles)' },
+        state: { type: 'string', description: 'State code, e.g. CA (maps to retailListing.state)' },
+        sort: { type: 'string', description: 'Sort criteria, e.g. price:asc' },
+        page: { type: 'string', description: 'Page number' },
+        limit: { type: 'string', description: 'Results per page (1-100)' },
       },
       required: [],
     },
@@ -95,11 +98,14 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
       type: 'object',
       properties: {
         vin: { type: 'string', description: 'Vehicle Identification Number' },
+        price: { type: 'string', description: 'Vehicle sales price' },
+        zip: { type: 'string', description: '5-digit ZIP code for tax/fee calculations' },
         downPayment: { type: 'string', description: 'Down payment amount' },
         loanTerm: { type: 'string', description: 'Loan term in months' },
-        creditScore: { type: 'string', description: 'Credit score' },
+        docFee: { type: 'string', description: 'Dealer documentation fee' },
+        tradeIn: { type: 'string', description: 'Trade-in vehicle value' },
       },
-      required: ['vin'],
+      required: ['vin', 'price', 'zip'],
     },
   },
   {
@@ -109,9 +115,15 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
       type: 'object',
       properties: {
         vin: { type: 'string', description: 'Vehicle Identification Number' },
-        creditScore: { type: 'string', description: 'Credit score' },
+        year: { type: 'string', description: 'Model year of the vehicle' },
+        make: { type: 'string', description: 'Vehicle manufacturer' },
+        model: { type: 'string', description: 'Vehicle model name' },
+        zip: { type: 'string', description: '5-digit ZIP code' },
+        creditScore: { type: 'string', description: 'Credit score for rate calculation' },
+        vehicleAge: { type: 'string', description: 'Age of the vehicle in years' },
+        vehicleMileage: { type: 'string', description: 'Current vehicle mileage' },
       },
-      required: ['vin'],
+      required: ['vin', 'year', 'make', 'model', 'zip', 'creditScore'],
     },
   },
   {
@@ -121,6 +133,8 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
       type: 'object',
       properties: {
         vin: { type: 'string', description: 'Vehicle Identification Number' },
+        zip: { type: 'string', description: '5-digit ZIP code' },
+        fromZip: { type: 'string', description: 'ZIP code for delivery/transport calculations' },
       },
       required: ['vin'],
     },
@@ -143,9 +157,9 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
       type: 'object',
       properties: {
         state: { type: 'string', description: 'Two-letter state abbreviation' },
-        number: { type: 'string', description: 'License plate number' },
+        plate: { type: 'string', description: 'License plate number' },
       },
-      required: ['state', 'number'],
+      required: ['state', 'plate'],
     },
   },
   {
@@ -155,9 +169,15 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
       type: 'object',
       properties: {
         vin: { type: 'string', description: 'Vehicle Identification Number' },
-        zip: { type: 'string', description: 'ZIP code for tax calculation' },
+        price: { type: 'string', description: 'Vehicle price (default 25000)' },
+        zip: { type: 'string', description: 'ZIP code for tax jurisdiction (default 94020)' },
+        docFee: { type: 'string', description: 'Documentation fee (default 200)' },
+        tradeIn: { type: 'string', description: 'Trade-in value (default 0)' },
+        rate: { type: 'string', description: 'Interest rate (default 9.99)' },
+        downPayment: { type: 'string', description: 'Down payment amount (default 0)' },
+        months: { type: 'string', description: 'Loan term in months (default 72)' },
       },
-      required: ['vin', 'zip'],
+      required: ['vin'],
     },
   },
 ]
@@ -193,17 +213,32 @@ export function createMcpServer(options: McpServerOptions): McpServer {
   server.registerTool('auto_listings', {
     description: ENDPOINTS.listings.description,
     inputSchema: {
-      make: z.string().optional().describe('Vehicle make'),
-      model: z.string().optional().describe('Vehicle model'),
-      year: z.string().optional().describe('Vehicle year'),
-      zip: z.string().optional().describe('ZIP code'),
-      radius: z.string().optional().describe('Search radius in miles'),
-      priceMin: z.string().optional().describe('Minimum price'),
-      priceMax: z.string().optional().describe('Maximum price'),
-      mileageMax: z.string().optional().describe('Maximum mileage'),
+      make: z.string().optional().describe('Vehicle manufacturer (maps to vehicle.make)'),
+      model: z.string().optional().describe('Vehicle model (maps to vehicle.model)'),
+      year: z.string().optional().describe('Year or range, e.g. 2018-2020 (maps to vehicle.year)'),
+      trim: z.string().optional().describe('Trim level (maps to vehicle.trim)'),
+      bodyStyle: z.string().optional().describe('Body style, e.g. sedan, coupe (maps to vehicle.bodyStyle)'),
+      price: z.string().optional().describe('Price range, e.g. 10000-30000 (maps to retailListing.price)'),
+      miles: z.string().optional().describe('Mileage range, e.g. 0-50000 (maps to retailListing.miles)'),
+      state: z.string().optional().describe('State code, e.g. CA (maps to retailListing.state)'),
+      sort: z.string().optional().describe('Sort criteria, e.g. price:asc'),
+      page: z.string().optional().describe('Page number'),
+      limit: z.string().optional().describe('Results per page (1-100)'),
     },
   }, async (args) => {
-    const data = await client.request('listings', { query: args as Record<string, string> })
+    const query: Record<string, string> = {}
+    if (args.make) query['vehicle.make'] = args.make
+    if (args.model) query['vehicle.model'] = args.model
+    if (args.year) query['vehicle.year'] = args.year
+    if (args.trim) query['vehicle.trim'] = args.trim
+    if (args.bodyStyle) query['vehicle.bodyStyle'] = args.bodyStyle
+    if (args.price) query['retailListing.price'] = args.price
+    if (args.miles) query['retailListing.miles'] = args.miles
+    if (args.state) query['retailListing.state'] = args.state
+    if (args.sort) query['sort'] = args.sort
+    if (args.page) query['page'] = args.page
+    if (args.limit) query['limit'] = args.limit
+    const data = await client.request('listings', { query })
     return { content: [{ type: 'text', text: JSON.stringify(data) }] }
   })
 
@@ -235,12 +270,19 @@ export function createMcpServer(options: McpServerOptions): McpServer {
     description: ENDPOINTS.payments.description,
     inputSchema: {
       vin: z.string().describe('Vehicle Identification Number'),
+      price: z.string().describe('Vehicle sales price'),
+      zip: z.string().describe('5-digit ZIP code for tax/fee calculations'),
       downPayment: z.string().optional().describe('Down payment amount'),
       loanTerm: z.string().optional().describe('Loan term in months'),
-      creditScore: z.string().optional().describe('Credit score'),
+      docFee: z.string().optional().describe('Dealer documentation fee'),
+      tradeIn: z.string().optional().describe('Trade-in vehicle value'),
     },
-  }, async ({ vin, downPayment, loanTerm, creditScore }) => {
-    const data = await client.request('payments', { vin, downPayment, loanTerm, creditScore })
+  }, async ({ vin, ...rest }) => {
+    const query: Record<string, string> = {}
+    for (const [k, v] of Object.entries(rest)) {
+      if (v !== undefined) query[k] = v
+    }
+    const data = await client.request('payments', { vin, query })
     return { content: [{ type: 'text', text: JSON.stringify(data) }] }
   })
 
@@ -248,18 +290,35 @@ export function createMcpServer(options: McpServerOptions): McpServer {
     description: ENDPOINTS.apr.description,
     inputSchema: {
       vin: z.string().describe('Vehicle Identification Number'),
-      creditScore: z.string().optional().describe('Credit score'),
+      year: z.string().describe('Model year of the vehicle'),
+      make: z.string().describe('Vehicle manufacturer'),
+      model: z.string().describe('Vehicle model name'),
+      zip: z.string().describe('5-digit ZIP code'),
+      creditScore: z.string().describe('Credit score for rate calculation'),
+      vehicleAge: z.string().optional().describe('Age of the vehicle in years'),
+      vehicleMileage: z.string().optional().describe('Current vehicle mileage'),
     },
-  }, async ({ vin, creditScore }) => {
-    const data = await client.request('apr', { vin, creditScore })
+  }, async ({ vin, ...rest }) => {
+    const query: Record<string, string> = {}
+    for (const [k, v] of Object.entries(rest)) {
+      if (v !== undefined) query[k] = v
+    }
+    const data = await client.request('apr', { vin, query })
     return { content: [{ type: 'text', text: JSON.stringify(data) }] }
   })
 
   server.registerTool('auto_tco', {
     description: ENDPOINTS.tco.description,
-    inputSchema: { vin: z.string().describe('Vehicle Identification Number') },
-  }, async ({ vin }) => {
-    const data = await client.request('tco', { vin })
+    inputSchema: {
+      vin: z.string().describe('Vehicle Identification Number'),
+      zip: z.string().optional().describe('5-digit ZIP code'),
+      fromZip: z.string().optional().describe('ZIP code for delivery/transport calculations'),
+    },
+  }, async ({ vin, zip, fromZip }) => {
+    const query: Record<string, string> = {}
+    if (zip) query['zip'] = zip
+    if (fromZip) query['fromZip'] = fromZip
+    const data = await client.request('tco', { vin, query })
     return { content: [{ type: 'text', text: JSON.stringify(data) }] }
   })
 
@@ -275,10 +334,10 @@ export function createMcpServer(options: McpServerOptions): McpServer {
     description: ENDPOINTS.plate.description,
     inputSchema: {
       state: z.string().describe('Two-letter state abbreviation'),
-      number: z.string().describe('License plate number'),
+      plate: z.string().describe('License plate number'),
     },
-  }, async ({ state, number }) => {
-    const data = await client.request('plate', { state, number })
+  }, async ({ state, plate }) => {
+    const data = await client.request('plate', { state, plate })
     return { content: [{ type: 'text', text: JSON.stringify(data) }] }
   })
 
@@ -286,10 +345,20 @@ export function createMcpServer(options: McpServerOptions): McpServer {
     description: ENDPOINTS.taxes.description,
     inputSchema: {
       vin: z.string().describe('Vehicle Identification Number'),
-      zip: z.string().describe('ZIP code for tax calculation'),
+      price: z.string().optional().describe('Vehicle price (default 25000)'),
+      zip: z.string().optional().describe('ZIP code for tax jurisdiction (default 94020)'),
+      docFee: z.string().optional().describe('Documentation fee (default 200)'),
+      tradeIn: z.string().optional().describe('Trade-in value (default 0)'),
+      rate: z.string().optional().describe('Interest rate (default 9.99)'),
+      downPayment: z.string().optional().describe('Down payment amount (default 0)'),
+      months: z.string().optional().describe('Loan term in months (default 72)'),
     },
-  }, async ({ vin, zip }) => {
-    const data = await client.request('taxes', { vin, query: { zip } })
+  }, async ({ vin, ...rest }) => {
+    const query: Record<string, string> = {}
+    for (const [k, v] of Object.entries(rest)) {
+      if (v !== undefined) query[k] = v
+    }
+    const data = await client.request('taxes', { vin, query })
     return { content: [{ type: 'text', text: JSON.stringify(data) }] }
   })
 

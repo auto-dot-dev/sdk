@@ -10,9 +10,7 @@ interface RequestParams {
   vin?: string
   state?: string
   number?: string
-  downPayment?: string
-  loanTerm?: string
-  creditScore?: string
+  plate?: string
   query?: Record<string, string>
 }
 
@@ -70,8 +68,8 @@ export class AutoDevClient {
     if (params?.state) {
       path = path.replace('{state}', params.state)
     }
-    if (params?.number) {
-      path = path.replace('{number}', params.number)
+    if (params?.number || params?.plate) {
+      path = path.replace('{number}', params.plate ?? params.number!)
     }
 
     const url = new URL(path, this.baseUrl)

@@ -6,7 +6,7 @@ describe('MCP Server', () => {
     expect(typeof createMcpServer).toBe('function')
   })
 
-  it('defines 12 tools (no usage tool in MCP)', () => {
+  it('defines 12 tools', () => {
     expect(TOOL_DEFINITIONS).toHaveLength(12)
   })
 
@@ -43,13 +43,61 @@ describe('MCP Server', () => {
   it('auto_listings tool has optional filter params', () => {
     const listings = TOOL_DEFINITIONS.find((t) => t.name === 'auto_listings')!
     expect(listings.inputSchema.properties).toHaveProperty('make')
-    expect(listings.inputSchema.properties).toHaveProperty('year')
-    expect(listings.inputSchema.properties).toHaveProperty('zip')
+    expect(listings.inputSchema.properties).toHaveProperty('price')
   })
 
-  it('auto_plate tool requires state and number', () => {
+  it('auto_listings tool has correct shorthand params with API mapping in description', () => {
+    const listings = TOOL_DEFINITIONS.find((t) => t.name === 'auto_listings')!
+    expect(listings.inputSchema.properties).toHaveProperty('make')
+    expect(listings.inputSchema.properties).toHaveProperty('price')
+    expect(listings.inputSchema.properties).toHaveProperty('miles')
+    expect(listings.inputSchema.properties).not.toHaveProperty('priceMin')
+    expect(listings.inputSchema.properties).not.toHaveProperty('priceMax')
+    expect(listings.inputSchema.properties).not.toHaveProperty('mileageMax')
+    expect(listings.inputSchema.properties).not.toHaveProperty('radius')
+    expect(listings.inputSchema.properties.make.description).toContain('vehicle.make')
+  })
+
+  it('auto_payments tool has price and zip as required', () => {
+    const payments = TOOL_DEFINITIONS.find((t) => t.name === 'auto_payments')!
+    expect(payments.inputSchema.required).toContain('vin')
+    expect(payments.inputSchema.required).toContain('price')
+    expect(payments.inputSchema.required).toContain('zip')
+  })
+
+  it('auto_apr tool has year, make, model, zip, creditScore as required', () => {
+    const apr = TOOL_DEFINITIONS.find((t) => t.name === 'auto_apr')!
+    expect(apr.inputSchema.required).toContain('vin')
+    expect(apr.inputSchema.required).toContain('year')
+    expect(apr.inputSchema.required).toContain('make')
+    expect(apr.inputSchema.required).toContain('model')
+    expect(apr.inputSchema.required).toContain('zip')
+    expect(apr.inputSchema.required).toContain('creditScore')
+  })
+
+  it('auto_plate tool requires state and plate (not number)', () => {
     const plate = TOOL_DEFINITIONS.find((t) => t.name === 'auto_plate')!
     expect(plate.inputSchema.required).toContain('state')
-    expect(plate.inputSchema.required).toContain('number')
+    expect(plate.inputSchema.required).toContain('plate')
+    expect(plate.inputSchema.required).not.toContain('number')
+  })
+
+  it('auto_taxes tool has all 7 query params plus vin', () => {
+    const taxes = TOOL_DEFINITIONS.find((t) => t.name === 'auto_taxes')!
+    const props = Object.keys(taxes.inputSchema.properties)
+    expect(props).toContain('vin')
+    expect(props).toContain('price')
+    expect(props).toContain('zip')
+    expect(props).toContain('docFee')
+    expect(props).toContain('tradeIn')
+    expect(props).toContain('rate')
+    expect(props).toContain('downPayment')
+    expect(props).toContain('months')
+  })
+
+  it('auto_tco tool has zip and fromZip', () => {
+    const tco = TOOL_DEFINITIONS.find((t) => t.name === 'auto_tco')!
+    expect(tco.inputSchema.properties).toHaveProperty('zip')
+    expect(tco.inputSchema.properties).toHaveProperty('fromZip')
   })
 })
