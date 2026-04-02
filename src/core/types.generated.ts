@@ -4568,40 +4568,40 @@ export interface Warranty {
 
 /** GET /listings/{vin} query parameters */
 export interface ListingsVinParams {
-  /** Filter by body style */
-  bodyStyle?: string
-  /** Search radius in miles */
-  distance?: string
-  /** Filter by drivetrain */
-  drivetrain?: string
-  /** Filter by exterior color */
-  exteriorColor?: string
-  /** Filter by fuel type */
-  fuel?: string
+  /** Search radius in miles (default: 50) */
+  distance?: number
   /** Comma-separated includes, e.g. "facets" */
   includes?: string
-  /** Filter by interior color */
-  interiorColor?: string
-  /** Results per page */
+  /** Results per page (default: 100) */
   limit?: number
-  /** Filter by vehicle make */
-  make?: string
-  /** Filter by mileage range */
-  miles?: string
-  /** Filter by vehicle model */
-  model?: string
-  /** Page number */
+  /** Page number (default: 1) */
   page?: number
-  /** Filter by price range */
-  price?: string
+  /** Filter by mileage */
+  'retailListing.miles'?: string
+  /** Filter by price */
+  'retailListing.price'?: string
   /** Sort field and direction, e.g. "price:desc", "mileage:asc", "year:desc" */
   sort?: string
+  /** Filter by body style */
+  'vehicle.bodyStyle'?: string
+  /** Filter by drivetrain */
+  'vehicle.drivetrain'?: string
+  /** Filter by exterior color */
+  'vehicle.exteriorColor'?: string
+  /** Filter by fuel type. Use .not suffix to exclude. */
+  'vehicle.fuel'?: string
+  /** Filter by interior color */
+  'vehicle.interiorColor'?: string
+  /** Filter by vehicle make. Use .not suffix to exclude. */
+  'vehicle.make'?: string
+  /** Filter by vehicle model. Use .not suffix to exclude. */
+  'vehicle.model'?: string
   /** Filter by transmission type */
-  transmission?: string
+  'vehicle.transmission'?: string
   /** Filter by trim level */
-  trim?: string
+  'vehicle.trim'?: string
   /** Filter by vehicle year */
-  year?: string
+  'vehicle.year'?: string
   /** ZIP code for location-based search */
   zip?: string
 }

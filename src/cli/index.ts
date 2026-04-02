@@ -13,17 +13,17 @@ const program = new Command()
   .version('0.1.0')
   .option('--mcp', 'Start as MCP stdio server')
 
-program.hook('preAction', async (thisCommand) => {
-  if (thisCommand.opts().mcp) {
-    const apiKey = process.env.AUTODEV_API_KEY ?? await getValidToken()
-    if (!apiKey) {
-      console.error('No API key found. Set AUTODEV_API_KEY or run: auto login')
-      process.exit(1)
-    }
-    await startMcpServer({ apiKey })
-    process.exit(0)
+// Handle --mcp before commander parses subcommands
+if (process.argv.includes('--mcp')) {
+  const apiKey = process.env.AUTODEV_API_KEY ?? await getValidToken()
+  if (!apiKey) {
+    console.error('No API key found. Set AUTODEV_API_KEY or run: auto login')
+    process.exit(1)
   }
-})
+  await startMcpServer({ apiKey })
+  // Keep process alive — stdio transport handles exit
+  await new Promise(() => {})
+}
 
 program.addCommand(buildLoginCommand())
 program.addCommand(buildLogoutCommand())

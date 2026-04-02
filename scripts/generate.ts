@@ -104,7 +104,8 @@ async function main() {
         if (param.description) {
           output += `  /** ${param.description} */\n`
         }
-        output += `  ${param.name}${optional}: ${tsType}\n`
+        const propName = param.name.includes('.') ? `'${param.name}'` : param.name
+        output += `  ${propName}${optional}: ${tsType}\n`
       }
 
       output += '}\n\n'
