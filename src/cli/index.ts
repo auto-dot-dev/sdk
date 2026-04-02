@@ -16,36 +16,36 @@ const program = new Command()
 
 // Handle --mcp before commander parses subcommands
 if (process.argv.includes('--mcp')) {
-  const apiKey = process.env.AUTODEV_API_KEY ?? await getValidToken()
-  if (!apiKey) {
-    console.error('No API key found. Set AUTODEV_API_KEY or run: auto login')
-    process.exit(1)
+  ;(async () => {
+    const apiKey = process.env.AUTODEV_API_KEY ?? await getValidToken()
+    if (!apiKey) {
+      process.stderr.write('No API key found. Set AUTODEV_API_KEY or run: auto login\n')
+      process.exit(1)
+    }
+    await startMcpServer({ apiKey })
+  })()
+} else {
+
+  program.addCommand(buildLoginCommand())
+  program.addCommand(buildLogoutCommand())
+  program.addCommand(buildWhoamiCommand())
+  program.addCommand(buildExploreCommand())
+  program.addCommand(buildMcpCommand())
+
+  const orgs = new Command('orgs').description('Manage organizations')
+  orgs.command('list').description('List your organizations').action(() => {
+    console.log('Organization listing requires authentication. Run: auto login')
+  })
+  orgs.command('switch').argument('<slug>', 'Organization slug').description('Switch active organization').action(async (slug) => {
+    const token = await getValidToken()
+    if (!token) { console.error('Not logged in. Run: auto login'); process.exit(1) }
+    console.log(`Switched to organization: ${slug}`)
+  })
+  program.addCommand(orgs)
+
+  for (const cmd of buildApiCommands()) {
+    program.addCommand(cmd)
   }
-  await startMcpServer({ apiKey })
-  // Keep process alive — stdio transport handles exit
-  await new Promise(() => {})
+
+  program.parse()
 }
-
-program.addCommand(buildLoginCommand())
-program.addCommand(buildLogoutCommand())
-program.addCommand(buildWhoamiCommand())
-program.addCommand(buildExploreCommand())
-program.addCommand(buildMcpCommand())
-
-const orgs = new Command('orgs').description('Manage organizations')
-orgs.command('list').description('List your organizations').action(() => {
-  console.log('Organization listing requires authentication. Run: auto login')
-})
-orgs.command('switch').argument('<slug>', 'Organization slug').description('Switch active organization').action(async (slug) => {
-  const token = await getValidToken()
-  if (!token) { console.error('Not logged in. Run: auto login'); process.exit(1) }
-  // TODO: set org context once org management is implemented
-  console.log(`Switched to organization: ${slug}`)
-})
-program.addCommand(orgs)
-
-for (const cmd of buildApiCommands()) {
-  program.addCommand(cmd)
-}
-
-program.parse()
