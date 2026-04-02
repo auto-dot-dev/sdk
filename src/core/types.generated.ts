@@ -1,6 +1,8 @@
 // Auto-generated from OpenAPI spec — do not edit manually
 // Run: pnpm generate
 
+// ── Response Types ──────────────────────────────────────────────────
+
 /** API */
 export interface API {
   "additionalProperties": false,
@@ -4562,7 +4564,127 @@ export interface Warranty {
   "type": "object"
 }
 
-// Discovered paths:
+// ── Request Parameter Types ─────────────────────────────────────────
+
+/** GET /listings/{vin} query parameters */
+export interface ListingsVinParams {
+  /** Filter by body style */
+  bodyStyle?: string
+  /** Search radius in miles */
+  distance?: string
+  /** Filter by drivetrain */
+  drivetrain?: string
+  /** Filter by exterior color */
+  exteriorColor?: string
+  /** Filter by fuel type */
+  fuel?: string
+  /** Comma-separated includes, e.g. "facets" */
+  includes?: string
+  /** Filter by interior color */
+  interiorColor?: string
+  /** Results per page */
+  limit?: number
+  /** Filter by vehicle make */
+  make?: string
+  /** Filter by mileage range */
+  miles?: string
+  /** Filter by vehicle model */
+  model?: string
+  /** Page number */
+  page?: number
+  /** Filter by price range */
+  price?: string
+  /** Sort field and direction, e.g. "price:desc", "mileage:asc", "year:desc" */
+  sort?: string
+  /** Filter by transmission type */
+  transmission?: string
+  /** Filter by trim level */
+  trim?: string
+  /** Filter by vehicle year */
+  year?: string
+  /** ZIP code for location-based search */
+  zip?: string
+}
+
+/** GET /transport/{vin} query parameters */
+export interface TransportVinParams {
+  /** Use enclosed trailer (default: "false") */
+  enclosedTrailer?: string
+  /** Origin ZIP code (default: "55435") */
+  fromZip?: string
+  /** Vehicle has keys (default: "true") */
+  hasKeys?: string
+  /** Destination ZIP code (default: user's ZIP or "94020") */
+  toZip?: string
+  /** Vehicle is operational (default: "true") */
+  vehicleOperational?: string
+}
+
+/** GET /recalls/{vin} query parameters */
+export interface RecallsVinParams {
+  /** Override make from VIN decode */
+  make?: string
+  /** Override model from VIN decode */
+  model?: string
+  /** Override year from VIN decode */
+  year?: string
+}
+
+/** GET /tco/{vin} query parameters */
+export interface TcoVinParams {
+  /** ZIP code (default: user's ZIP or "90210") */
+  zip?: string
+}
+
+/** GET /payments/{vin} query parameters */
+export interface PaymentsVinParams {
+  /** Credit score (default: "750") */
+  creditScore?: string
+  /** Documentation fee (default: 200) */
+  docFee?: number
+  /** Down payment amount (default: 0) */
+  downPayment?: number
+  /** Override interest rate */
+  interestRate?: number
+  /** Override vehicle price */
+  price?: number
+  /** Loan term in months (default: 72) */
+  term?: number
+  /** Trade-in value (default: 0) */
+  tradeIn?: number
+  /** ZIP code (default: user's ZIP or "94020") */
+  zip?: string
+}
+
+/** GET /apr/{vin} query parameters */
+export interface AprVinParams {
+  /** Credit score (default: "720") */
+  creditScore?: string
+  /** Vehicle mileage */
+  vehicleMileage?: string
+  /** ZIP code (default: user's ZIP or "90210") */
+  zip?: string
+}
+
+/** GET /taxes/{vin} query parameters */
+export interface TaxesVinParams {
+  /** Documentation fee (default: 200) */
+  docFee?: number
+  /** Down payment (default: 0) */
+  downPayment?: number
+  /** Loan term in months (default: 72) */
+  months?: number
+  /** Vehicle price (default: 25000) */
+  price?: number
+  /** Interest rate (default: 9.99) */
+  rate?: number
+  /** Trade-in value (default: 0) */
+  tradeIn?: number
+  /** ZIP code (default: user's ZIP or "94020") */
+  zip?: string
+}
+
+// ── Discovered Paths ────────────────────────────────────────────────
 // GET /ctx/{vin}
 // GET /photos/retail/{vin}
 // GET /photos/wholesale/{vin}
@@ -4571,7 +4693,10 @@ export interface Warranty {
 // GET /transport/{vin}
 // GET /specs/{vin}
 // GET /recalls/{vin}
+// GET /tco/{vin}
 // GET /payments/{vin}
 // GET /marketvalue/{vin}
+// GET /apr/{vin}
 // GET /openrecalls/{vin}
 // GET /taxes/{vin}
+
