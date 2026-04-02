@@ -4,6 +4,7 @@ import { Command } from 'commander'
 import { buildLoginCommand, buildLogoutCommand, buildWhoamiCommand } from './auth'
 import { buildApiCommands } from './commands'
 import { buildExploreCommand } from './explore'
+import { buildMcpCommand } from './mcp-install'
 import { startMcpServer } from '../mcp/server'
 import { getValidToken } from '../auth/oauth'
 
@@ -29,6 +30,7 @@ program.addCommand(buildLoginCommand())
 program.addCommand(buildLogoutCommand())
 program.addCommand(buildWhoamiCommand())
 program.addCommand(buildExploreCommand())
+program.addCommand(buildMcpCommand())
 
 const orgs = new Command('orgs').description('Manage organizations')
 orgs.command('list').description('List your organizations').action(() => {
