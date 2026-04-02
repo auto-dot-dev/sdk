@@ -4,6 +4,5 @@ dist/
 *.tsbuildinfo
 .env
 .env.local
-docs/plans
-docs/specs
+docs/
 

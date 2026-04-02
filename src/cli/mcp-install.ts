@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { homedir } from 'node:os'
+import { execSync } from 'node:child_process'
 import { Command } from 'commander'
 import { getValidToken } from '../auth/oauth'
 
@@ -12,8 +13,8 @@ interface McpClient {
 }
 
 const BASE_SERVER_CONFIG = {
-  command: 'npx',
-  args: ['-y', '@auto.dev/sdk', '--mcp'],
+  command: 'auto',
+  args: ['--mcp'],
 }
 
 const MCP_CLIENTS: McpClient[] = [
@@ -108,13 +109,22 @@ export function buildMcpCommand(): Command {
         await loginCmd.parseAsync(['login'], { from: 'user' })
       }
 
+      // Install globally so the `auto` binary is available
+      console.log('Installing @auto.dev/sdk globally...')
+      try {
+        execSync('npm install -g @auto.dev/sdk', { stdio: 'inherit' })
+      } catch {
+        console.error('Failed to install @auto.dev/sdk globally. Try running: npm install -g @auto.dev/sdk')
+        return
+      }
+
       // Detect clients
       const clients = detectClients()
       if (clients.length === 0) {
         console.log('No supported MCP clients detected.')
         console.log('Supported: Claude Code, Claude Desktop, Cursor')
-        console.log('\nManual config:')
-        console.log(JSON.stringify({ 'auto-dev': BASE_SERVER_CONFIG }, null, 2))
+        console.log('\nManual config (add to your MCP settings):')
+        console.log(JSON.stringify({ 'auto-dev': { type: 'stdio', ...BASE_SERVER_CONFIG } }, null, 2))
         return
       }
 
