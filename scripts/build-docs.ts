@@ -9,6 +9,8 @@
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from 'node:fs'
 import { join, basename, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { execSync } from 'node:child_process'
+import { homedir } from 'node:os'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -27,21 +29,19 @@ function findDocsPath(): string {
     if (match) return match[1].trim().replace(/^["']|["']$/g, '')
   }
 
-  // 4. Check common sibling locations
-  const candidates = [
-    join(__dirname, '..', '..', 'docs.auto.dev'),
-    join(__dirname, '..', '..', 'AUTO_DEV-API', 'docs.auto.dev'),
-    join(__dirname, '..', '..', '..', 'docs.auto.dev'),
-    join(__dirname, '..', '..', '..', 'AUTO_DEV-API', 'docs.auto.dev'),
-  ]
-
-  for (const candidate of candidates) {
-    if (existsSync(join(candidate, 'content', 'docs', 'v2', 'products'))) {
-      return candidate
-    }
+  // 4. Try to find docs.auto.dev anywhere under ~/Workspace using find
+  try {
+    const workspace = join(homedir(), 'Workspace')
+    const result = execSync(
+      `find ${workspace} -maxdepth 5 -type d -name "docs.auto.dev" -exec test -d "{}/content/docs/v2/products" \\; -print -quit 2>/dev/null`,
+      { encoding: 'utf-8', timeout: 5000 },
+    ).trim()
+    if (result) return result
+  } catch {
+    // find failed or timed out, fall through
   }
 
-  return candidates[0]
+  return join(__dirname, '..', '..', 'docs.auto.dev')
 }
 
 const DOCS_PATH = findDocsPath()
