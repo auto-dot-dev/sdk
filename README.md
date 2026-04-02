@@ -41,15 +41,22 @@ auto explore decode
 
 ## MCP Server
 
-Add to your MCP client config:
+Auto-configure for Claude Code, Claude Desktop, and Cursor:
+
+```bash
+npx @auto.dev/sdk mcp install
+```
+
+This installs the SDK globally and registers the MCP server in all detected clients. No API key needed — uses your OAuth login automatically.
+
+To manually configure, add to your MCP client config:
 
 ```json
 {
   "mcpServers": {
     "auto-dev": {
-      "command": "npx",
-      "args": ["@auto.dev/sdk", "--mcp"],
-      "env": { "AUTODEV_API_KEY": "ad_sk_..." }
+      "command": "auto",
+      "args": ["--mcp"]
     }
   }
 }
