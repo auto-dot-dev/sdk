@@ -123,24 +123,30 @@ export function buildApiCommands(): Command[] {
     new Command('listings')
       .description('Search vehicle listings with filters'),
   )
-    .option('--make <make>', 'Vehicle make')
-    .option('--model <model>', 'Vehicle model')
-    .option('--year <year>', 'Model year')
-    .option('--zip <zip>', 'ZIP code')
-    .option('--price <price>', 'Price filter')
-    .option('--miles <miles>', 'Mileage filter')
+    .option('--make <make>', 'Vehicle make (maps to vehicle.make)')
+    .option('--model <model>', 'Vehicle model (maps to vehicle.model)')
+    .option('--year <year>', 'Model year or range, e.g. 2024 or 2020-2024 (maps to vehicle.year)')
+    .option('--trim <trim>', 'Trim level (maps to vehicle.trim)')
+    .option('--body-style <style>', 'Body style, e.g. sedan, coupe (maps to vehicle.bodyStyle)')
+    .option('--price <price>', 'Price range, e.g. 10000-30000 (maps to retailListing.price)')
+    .option('--miles <miles>', 'Mileage range, e.g. 0-50000 (maps to retailListing.miles)')
+    .option('--state <state>', 'State code, e.g. CA (maps to retailListing.state)')
     .option('--sort <sort>', 'Sort (e.g. "price:asc", "year:desc")')
-    .option('--limit <limit>', 'Results per page')
+    .option('--page <page>', 'Page number')
+    .option('--limit <limit>', 'Results per page (1-100)')
     .action(async (options) => {
       const apiKey = await getApiKey(options)
       const params = new URLSearchParams()
       if (options.make) params.set('vehicle.make', options.make)
       if (options.model) params.set('vehicle.model', options.model)
       if (options.year) params.set('vehicle.year', options.year)
-      if (options.zip) params.set('zip', options.zip)
+      if (options.trim) params.set('vehicle.trim', options.trim)
+      if (options.bodyStyle) params.set('vehicle.bodyStyle', options.bodyStyle)
       if (options.price) params.set('retailListing.price', options.price)
       if (options.miles) params.set('retailListing.miles', options.miles)
+      if (options.state) params.set('retailListing.state', options.state)
       if (options.sort) params.set('sort', options.sort)
+      if (options.page) params.set('page', options.page)
       if (options.limit) params.set('limit', options.limit)
       const query = params.toString() ? `?${params.toString()}` : ''
       const data = await apiGet(`/listings${query}`, apiKey)
@@ -190,17 +196,21 @@ export function buildApiCommands(): Command[] {
       .description('Calculate monthly payments by VIN')
       .argument('<vin>', 'Vehicle Identification Number'),
   )
+    .option('--price <price>', 'Vehicle sales price')
+    .option('--zip <zip>', 'ZIP code for tax/fee calculations')
     .option('--down-payment <amount>', 'Down payment amount')
-    .option('--term <months>', 'Loan term in months')
-    .option('--credit-score <score>', 'Credit score')
-    .option('--zip <zip>', 'ZIP code')
+    .option('--loan-term <months>', 'Loan term in months')
+    .option('--doc-fee <fee>', 'Dealer documentation fee')
+    .option('--trade-in <value>', 'Trade-in vehicle value')
     .action(async (vin, options) => {
       const apiKey = await getApiKey(options)
       const params = new URLSearchParams()
-      if (options.downPayment) params.set('downPayment', options.downPayment)
-      if (options.term) params.set('term', options.term)
-      if (options.creditScore) params.set('creditScore', options.creditScore)
+      if (options.price) params.set('price', options.price)
       if (options.zip) params.set('zip', options.zip)
+      if (options.downPayment) params.set('downPayment', options.downPayment)
+      if (options.loanTerm) params.set('loanTerm', options.loanTerm)
+      if (options.docFee) params.set('docFee', options.docFee)
+      if (options.tradeIn) params.set('tradeIn', options.tradeIn)
       const query = params.toString() ? `?${params.toString()}` : ''
       const data = await apiGet(`/payments/${vin}${query}`, apiKey)
       console.log(formatOutput(data, getFormat(options)))
@@ -213,11 +223,23 @@ export function buildApiCommands(): Command[] {
       .description('Get interest rates by VIN and credit profile')
       .argument('<vin>', 'Vehicle Identification Number'),
   )
+    .option('--year <year>', 'Model year')
+    .option('--make <make>', 'Vehicle manufacturer')
+    .option('--model <model>', 'Vehicle model')
+    .option('--zip <zip>', 'ZIP code')
     .option('--credit-score <score>', 'Credit score')
+    .option('--vehicle-age <years>', 'Age of vehicle in years')
+    .option('--vehicle-mileage <miles>', 'Current vehicle mileage')
     .action(async (vin, options) => {
       const apiKey = await getApiKey(options)
       const params = new URLSearchParams()
-      if (options.creditScore) params.set('credit_score', options.creditScore)
+      if (options.year) params.set('year', options.year)
+      if (options.make) params.set('make', options.make)
+      if (options.model) params.set('model', options.model)
+      if (options.zip) params.set('zip', options.zip)
+      if (options.creditScore) params.set('creditScore', options.creditScore)
+      if (options.vehicleAge) params.set('vehicleAge', options.vehicleAge)
+      if (options.vehicleMileage) params.set('vehicleMileage', options.vehicleMileage)
       const query = params.toString() ? `?${params.toString()}` : ''
       const data = await apiGet(`/apr/${vin}${query}`, apiKey)
       console.log(formatOutput(data, getFormat(options)))
@@ -229,11 +251,18 @@ export function buildApiCommands(): Command[] {
     new Command('tco')
       .description('Calculate total cost of ownership by VIN')
       .argument('<vin>', 'Vehicle Identification Number'),
-  ).action(async (vin, options) => {
-    const apiKey = await getApiKey(options)
-    const data = await apiGet(`/tco/${vin}`, apiKey)
-    console.log(formatOutput(data, getFormat(options)))
-  })
+  )
+    .option('--zip <zip>', 'ZIP code for location-based calculations')
+    .option('--from-zip <zip>', 'ZIP code for delivery/transport calculations')
+    .action(async (vin, options) => {
+      const apiKey = await getApiKey(options)
+      const params = new URLSearchParams()
+      if (options.zip) params.set('zip', options.zip)
+      if (options.fromZip) params.set('fromZip', options.fromZip)
+      const query = params.toString() ? `?${params.toString()}` : ''
+      const data = await apiGet(`/tco/${vin}${query}`, apiKey)
+      console.log(formatOutput(data, getFormat(options)))
+    })
   commands.push(tco)
 
   // open-recalls
@@ -253,10 +282,10 @@ export function buildApiCommands(): Command[] {
     new Command('plate')
       .description('Resolve a license plate to a VIN')
       .argument('<state>', 'Two-letter state abbreviation')
-      .argument('<number>', 'License plate number'),
-  ).action(async (state, number, options) => {
+      .argument('<plate>', 'License plate number'),
+  ).action(async (state, plate, options) => {
     const apiKey = await getApiKey(options)
-    const data = await apiGet(`/plate/${state}/${number}`, apiKey)
+    const data = await apiGet(`/plate/${state}/${plate}`, apiKey)
     console.log(formatOutput(data, getFormat(options)))
   })
   commands.push(plate)
@@ -267,16 +296,39 @@ export function buildApiCommands(): Command[] {
       .description('Estimate taxes and fees by VIN and ZIP code')
       .argument('<vin>', 'Vehicle Identification Number'),
   )
-    .option('--zip <zip>', 'ZIP code for tax jurisdiction')
+    .option('--price <price>', 'Vehicle price (default 25000)')
+    .option('--zip <zip>', 'ZIP code for tax jurisdiction (default 94020)')
+    .option('--doc-fee <fee>', 'Documentation fee (default 200)')
+    .option('--trade-in <value>', 'Trade-in value (default 0)')
+    .option('--rate <rate>', 'Interest rate (default 9.99)')
+    .option('--down-payment <amount>', 'Down payment amount (default 0)')
+    .option('--months <months>', 'Loan term in months (default 72)')
     .action(async (vin, options) => {
       const apiKey = await getApiKey(options)
       const params = new URLSearchParams()
+      if (options.price) params.set('price', options.price)
       if (options.zip) params.set('zip', options.zip)
+      if (options.docFee) params.set('docFee', options.docFee)
+      if (options.tradeIn) params.set('tradeIn', options.tradeIn)
+      if (options.rate) params.set('rate', options.rate)
+      if (options.downPayment) params.set('downPayment', options.downPayment)
+      if (options.months) params.set('months', options.months)
       const query = params.toString() ? `?${params.toString()}` : ''
       const data = await apiGet(`/taxes/${vin}${query}`, apiKey)
       console.log(formatOutput(data, getFormat(options)))
     })
   commands.push(taxes)
+
+  // usage
+  const usage = outputOptions(
+    new Command('usage')
+      .description('Get account usage statistics'),
+  ).action(async (options) => {
+    const apiKey = await getApiKey(options)
+    const data = await apiGet('/usage', apiKey)
+    console.log(formatOutput(data, getFormat(options)))
+  })
+  commands.push(usage)
 
   return commands
 }

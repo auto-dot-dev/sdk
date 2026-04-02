@@ -2,9 +2,9 @@ import { describe, it, expect } from 'vitest'
 import { buildApiCommands } from '../../src/cli/commands'
 
 describe('CLI API Commands', () => {
-  it('builds 12 API commands', () => {
+  it('builds 13 API commands', () => {
     const commands = buildApiCommands()
-    expect(commands).toHaveLength(12)
+    expect(commands).toHaveLength(13)
   })
 
   it('decode command has vin as required argument', () => {
@@ -20,7 +20,7 @@ describe('CLI API Commands', () => {
     const optionNames = listings.options.map((o) => o.long)
     expect(optionNames).toContain('--make')
     expect(optionNames).toContain('--year')
-    expect(optionNames).toContain('--zip')
+    expect(optionNames).toContain('--state')
   })
 
   it('plate command has state and number as required arguments', () => {
