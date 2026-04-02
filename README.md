@@ -5,7 +5,35 @@ SDK, MCP server, and CLI for the [auto.dev](https://auto.dev) automotive APIs.
 ## Install
 
 ```bash
+# CLI and MCP server
+npm install -g @auto.dev/sdk
+
+# As a library dependency
 npm install @auto.dev/sdk
+```
+
+## CLI Usage
+
+```bash
+# Login (opens browser for OAuth)
+auto login
+
+# Decode a VIN
+auto decode 1HGCM82633A004352
+
+# Search listings
+auto listings --make toyota --year 2024 --zip 90210
+
+# Discover available endpoints
+auto explore
+auto explore decode
+```
+
+Or use without installing globally:
+
+```bash
+npx @auto.dev/sdk login
+npx @auto.dev/sdk decode 1HGCM82633A004352
 ```
 
 ## SDK Usage
@@ -20,23 +48,6 @@ const photos = await auto.photos('1HGCM82633A004352')
 const listings = await auto.listings({ make: 'Toyota', year: 2024 })
 const specs = await auto.specs('1HGCM82633A004352')
 const payments = await auto.payments('1HGCM82633A004352', { downPayment: 5000 })
-```
-
-## CLI Usage
-
-```bash
-# Login
-auto login
-
-# Decode a VIN
-auto decode 1HGCM82633A004352
-
-# Search listings
-auto listings --make toyota --year 2024 --zip 90210
-
-# Discover available endpoints
-auto explore
-auto explore decode
 ```
 
 ## MCP Server
