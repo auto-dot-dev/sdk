@@ -3,7 +3,8 @@ import { join, basename, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const DOCS_DIR = join(__dirname, '..', '..', 'dist', 'docs')
+// At runtime this file is bundled into dist/ as a chunk, so docs/ is a sibling
+const DOCS_DIR = join(__dirname, 'docs')
 
 export interface DocEntry {
   name: string
