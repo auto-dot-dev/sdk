@@ -36,4 +36,54 @@ describe('Explore Command', () => {
     const detail = getEndpointDetail('nonexistent')
     expect(detail).toBeNull()
   })
+
+  it('listings params match docs.auto.dev with API mapping', () => {
+    const detail = getEndpointDetail('listings')!
+    const paramNames = detail.parameters.map((p) => p.name)
+    expect(paramNames).toContain('make')
+    expect(paramNames).toContain('model')
+    expect(paramNames).toContain('year')
+    expect(paramNames).toContain('price')
+    expect(paramNames).toContain('miles')
+    expect(paramNames).toContain('state')
+    const makeParam = detail.parameters.find((p) => p.name === 'make')!
+    expect(makeParam.apiParam).toBe('vehicle.make')
+  })
+
+  it('payments params include price and zip as required', () => {
+    const detail = getEndpointDetail('payments')!
+    const price = detail.parameters.find((p) => p.name === 'price')!
+    expect(price.required).toBe(true)
+    const zip = detail.parameters.find((p) => p.name === 'zip')!
+    expect(zip.required).toBe(true)
+    const downPayment = detail.parameters.find((p) => p.name === 'downPayment')!
+    expect(downPayment.required).toBe(false)
+  })
+
+  it('apr params include required year, make, model, zip, creditScore', () => {
+    const detail = getEndpointDetail('apr')!
+    for (const name of ['year', 'make', 'model', 'zip', 'creditScore']) {
+      const param = detail.parameters.find((p) => p.name === name)!
+      expect(param.required).toBe(true)
+    }
+  })
+
+  it('plate params use plate not number', () => {
+    const detail = getEndpointDetail('plate')!
+    const paramNames = detail.parameters.map((p) => p.name)
+    expect(paramNames).toContain('plate')
+    expect(paramNames).not.toContain('number')
+  })
+
+  it('tco params include zip and fromZip', () => {
+    const detail = getEndpointDetail('tco')!
+    const paramNames = detail.parameters.map((p) => p.name)
+    expect(paramNames).toContain('zip')
+    expect(paramNames).toContain('fromZip')
+  })
+
+  it('taxes params include all 7 query params', () => {
+    const detail = getEndpointDetail('taxes')!
+    expect(detail.parameters.filter((p) => p.in === 'query')).toHaveLength(7)
+  })
 })
