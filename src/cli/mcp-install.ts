@@ -4,6 +4,7 @@ import { homedir } from 'node:os'
 import { execSync } from 'node:child_process'
 import { Command } from 'commander'
 import { getValidToken } from '../auth/oauth'
+import { brand, label, value, hint, formatSuccess, formatError } from './colors'
 
 interface McpClient {
   name: string
@@ -103,27 +104,28 @@ export function buildMcpCommand(): Command {
       // Check auth
       const token = await getValidToken()
       if (!token) {
-        console.log('You need to log in first.\n')
+        console.log(formatError('You need to log in first', 'Run: auto login'))
+        console.log()
         const { buildLoginCommand } = await import('./auth')
         const loginCmd = buildLoginCommand()
         await loginCmd.parseAsync(['login'], { from: 'user' })
       }
 
       // Install globally so the `auto` binary is available
-      console.log('Installing @auto.dev/sdk globally...')
+      console.log(`${brand('auto.dev')} ${hint('Installing globally...')}`)
       try {
         execSync('npm install -g @auto.dev/sdk', { stdio: 'inherit' })
       } catch {
-        console.error('Failed to install @auto.dev/sdk globally. Try running: npm install -g @auto.dev/sdk')
+        console.error(formatError('Failed to install globally', 'Try running: npm install -g @auto.dev/sdk'))
         return
       }
 
       // Detect clients
       const clients = detectClients()
       if (clients.length === 0) {
-        console.log('No supported MCP clients detected.')
-        console.log('Supported: Claude Code, Claude Desktop, Cursor')
-        console.log('\nManual config (add to your MCP settings):')
+        console.log(formatError('No supported MCP clients detected'))
+        console.log(hint('Supported: Claude Code, Claude Desktop, Cursor'))
+        console.log(hint('\nManual config (add to your MCP settings):'))
         console.log(JSON.stringify({ 'auto-dev': { type: 'stdio', ...BASE_SERVER_CONFIG } }, null, 2))
         return
       }
@@ -131,19 +133,19 @@ export function buildMcpCommand(): Command {
       let installed = 0
       for (const client of clients) {
         if (isInstalled(client)) {
-          console.log(`${client.name}: already installed`)
+          console.log(formatSuccess(`${label(client.name)} ${hint('already installed')}`))
         } else {
           install(client)
-          console.log(`${client.name}: installed`)
+          console.log(formatSuccess(`${label(client.name)} ${value('installed')}`))
           installed++
         }
       }
 
       if (installed > 0) {
-        console.log('\nDone! Restart your AI tool to activate auto.dev tools.')
-        console.log('No API key needed — uses your login automatically.')
+        console.log(`\n${formatSuccess('Done! Restart your AI tool to activate auto.dev tools.')}`)
+        console.log(hint('No API key needed — uses your login automatically.'))
       } else {
-        console.log('\nauto.dev MCP is already configured in all detected clients.')
+        console.log(`\n${hint('auto.dev MCP is already configured in all detected clients.')}`)
       }
     })
 
@@ -155,25 +157,29 @@ export function buildMcpCommand(): Command {
       for (const client of clients) {
         if (isInstalled(client)) {
           uninstall(client)
-          console.log(`${client.name}: removed`)
+          console.log(formatSuccess(`${label(client.name)} ${hint('removed')}`))
         }
       }
-      console.log('Done.')
+      console.log(formatSuccess('Done.'))
     })
 
   mcp
     .command('status')
     .description('Check MCP installation status')
     .action(() => {
+      console.log(`\n${brand('auto.dev')} ${hint('MCP Status')}\n`)
       const clients = detectClients()
       if (clients.length === 0) {
-        console.log('No supported MCP clients detected.')
+        console.log(formatError('No supported MCP clients detected'))
         return
       }
       for (const client of clients) {
-        const status = isInstalled(client) ? 'installed' : 'not installed'
-        console.log(`${client.name}: ${status}`)
+        const installed = isInstalled(client)
+        const icon = installed ? '✔' : '✖'
+        const status = installed ? value('installed') : hint('not installed')
+        console.log(`  ${installed ? brand(icon) : hint(icon)} ${label(client.name)}  ${status}`)
       }
+      console.log()
     })
 
   return mcp

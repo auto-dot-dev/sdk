@@ -1,6 +1,6 @@
 import { Command } from 'commander'
 import { getValidToken } from '../auth/oauth'
-import { formatError } from './colors'
+import { formatError, red } from './colors'
 
 const BASE_URL = process.env.AUTODEV_BASE_URL ?? 'https://api.auto.dev'
 
@@ -32,8 +32,18 @@ async function apiGet(path: string, apiKey: string): Promise<unknown> {
   })
   if (!response.ok) {
     const body = await response.json().catch(() => ({ error: response.statusText }))
-    const errorMsg = typeof body?.error === 'string' ? body.error : typeof body?.message === 'string' ? body.message : JSON.stringify(body)
-    throw new Error(formatError(`API error ${response.status}: ${errorMsg}`))
+    let errorMsg: string
+    if (body?.error && typeof body.error === 'object' && body.error.error) {
+      errorMsg = body.error.error
+    } else if (typeof body?.error === 'string') {
+      errorMsg = body.error
+    } else if (typeof body?.message === 'string') {
+      errorMsg = body.message
+    } else {
+      errorMsg = response.statusText
+    }
+    console.error(formatError(`${response.status}: ${errorMsg}`))
+    process.exit(1)
   }
   return response.json()
 }
