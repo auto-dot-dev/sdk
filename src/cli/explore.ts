@@ -180,6 +180,12 @@ export function buildExploreCommand(): Command {
           console.log(`  ${label(ep.name.padEnd(16))} ${value(ep.path.padEnd(28))} ${dim(ep.description)}`)
         }
       }
+
+      console.log(`\n${dim('─'.repeat(50))}`)
+      console.log(`  ${brand('auto')} ${label('<endpoint>')}${dim(' .............. make an API call')}`)
+      console.log(`  ${brand('auto explore')} ${label('<endpoint>')}${dim(' ...... view parameters')}`)
+      console.log(`  ${brand('auto docs')} ${label('<endpoint>')}${dim(' ......... full documentation')}`)
+      console.log()
     })
 
   return cmd
