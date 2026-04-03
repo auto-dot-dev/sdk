@@ -1,6 +1,6 @@
 import { Command } from 'commander'
 import { getValidToken } from '../auth/oauth'
-import { formatError, formatSuccess, brand, value, hint, label, red } from './colors'
+import { formatError, formatSuccess, brand, value, hint, label, limeGreen, brown, yellowNum, red } from './colors'
 
 const BASE_URL = process.env.AUTODEV_BASE_URL ?? 'https://api.auto.dev'
 
@@ -47,15 +47,24 @@ async function apiGet(path: string, apiKey: string): Promise<unknown> {
     console.error(formatError(`${response.status}: ${errorMsg}`))
     process.exit(1)
   }
-  // Extract endpoint name from path
-  const endpoint = path.split('/').filter(Boolean)[0] ?? path
+  // Extract endpoint name from path (strip query string and VIN)
+  const endpoint = path.split('?')[0].split('/').filter(Boolean)[0] ?? path
   console.error(formatSuccess(`${brand(endpoint)}  ${hint(String(response.status))}  ${hint(elapsed + 's')}`))
   console.error()
   return response.json()
 }
 
 function colorizeJson(json: string): string {
-  return json.replace(/"([^"]+)":/g, (_, key) => `${value(`"${key}"`)}:`)
+  // Color keys cyan, then values by type
+  return json
+    .replace(/"([^"]+)":/g, (_, key) => `${value(`"${key}"`)}:`)
+    .replace(/: "(https?:\/\/[^"]+)"/g, (_, url) => `: "${limeGreen(url)}"`)
+    .replace(/: "([^"\x1b]*)"/g, (_, str) => `: ${brown(`"${str}"`)}`)
+    .replace(/: (-?\d+\.?\d*)(,?\n)/g, (_, num, end) => `: ${yellowNum(num)}${end}`)
+    .replace(/: (true|false)(,?\n)/g, (_, bool, end) => `: ${yellowNum(bool)}${end}`)
+    .replace(/: (null)(,?\n)/g, (_, nul, end) => `: ${yellowNum(nul)}${end}`)
+    .replace(/^(\s+)(-?\d+\.?\d*)(,?\n)/gm, (_, indent, num, end) => `${indent}${yellowNum(num)}${end}`)
+
 }
 
 function formatOutput(data: unknown, format: string): string {
