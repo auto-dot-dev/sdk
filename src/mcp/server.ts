@@ -5,6 +5,7 @@ import { AutoDevClient } from '../core/client.js'
 import { AutoDevError } from '../errors.js'
 import { ENDPOINTS } from '../core/endpoints.js'
 import { searchDocs, getDoc, listDocs } from '../docs/search.js'
+import { loadConfig, saveConfig } from '../core/config.js'
 
 export interface ToolDefinition {
   name: string
@@ -191,6 +192,29 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
         query: { type: 'string', description: 'Search query or endpoint name (e.g. "listings", "payments", "VIN decode")' },
       },
       required: ['query'],
+    },
+  },
+  {
+    name: 'auto_config_set',
+    description: 'Set a config value (e.g. raw: true to show full API responses)',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        key: { type: 'string', description: 'Config key (e.g. "raw")' },
+        value: { type: 'string', description: 'Config value (e.g. "true" or "false")' },
+      },
+      required: ['key', 'value'],
+    },
+  },
+  {
+    name: 'auto_config_get',
+    description: 'Get a config value or list all config settings',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        key: { type: 'string', description: 'Config key to read (omit for all settings)' },
+      },
+      required: [],
     },
   },
 ]
@@ -439,6 +463,32 @@ export function createMcpServer(options: McpServerOptions): McpServer {
       text += `\n\n---\nAlso related: ${others}`
     }
     return { content: [{ type: 'text', text }] }
+  })
+
+  server.registerTool('auto_config_set', {
+    description: 'Set a config value (e.g. raw: true to show full API responses)',
+    inputSchema: {
+      key: z.string().describe('Config key (e.g. "raw")'),
+      value: z.string().describe('Config value (e.g. "true" or "false")'),
+    },
+  }, async ({ key, value: val }) => {
+    const parsed = val === 'true' ? true : val === 'false' ? false : val
+    saveConfig({ [key]: parsed })
+    return { content: [{ type: 'text', text: `Config "${key}" set to ${parsed}` }] }
+  })
+
+  server.registerTool('auto_config_get', {
+    description: 'Get a config value or list all config settings',
+    inputSchema: {
+      key: z.string().optional().describe('Config key to read (omit for all settings)'),
+    },
+  }, async ({ key }) => {
+    const config = loadConfig()
+    if (key) {
+      const val = (config as Record<string, unknown>)[key]
+      return { content: [{ type: 'text', text: val !== undefined ? `${key}: ${val}` : `${key} is not set` }] }
+    }
+    return { content: [{ type: 'text', text: JSON.stringify(config, null, 2) }] }
   })
 
   return server

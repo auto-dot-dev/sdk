@@ -6,8 +6,8 @@ describe('MCP Server', () => {
     expect(typeof createMcpServer).toBe('function')
   })
 
-  it('defines 13 tools (12 endpoints + auto_docs)', () => {
-    expect(TOOL_DEFINITIONS).toHaveLength(13)
+  it('defines 15 tools (12 endpoints + auto_docs + config_set/get)', () => {
+    expect(TOOL_DEFINITIONS).toHaveLength(15)
   })
 
   it('all tools have name, description, and inputSchema', () => {
