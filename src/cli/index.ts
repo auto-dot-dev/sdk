@@ -7,7 +7,8 @@ import { buildExploreCommand } from './explore'
 import { buildMcpCommand } from './mcp-install'
 import { startMcpServer } from '../mcp/server'
 import { getValidToken } from '../auth/oauth'
-import { listDocs, getDoc, searchDocs } from '../docs/search.js'
+import { listDocs, getDoc, searchDocs, getAliases } from '../docs/search.js'
+import { brand, label, hint, value, formatError } from './colors'
 
 const program = new Command()
   .name('auto')
@@ -51,32 +52,44 @@ if (process.argv.includes('--mcp')) {
       if (!query) {
         const available = listDocs()
         if (available.length === 0) {
-          console.log('No bundled docs found. Run: npm run build:docs')
+          console.log(formatError('No bundled docs found', 'Run: npm run build:docs'))
           return
         }
-        console.log('Available documentation:\n')
-        for (const name of available) {
-          console.log(`  auto docs ${name}`)
+        console.log(`\n${brand('auto.dev')} ${hint('Documentation')}\n`)
+        // Show in same order as explore endpoints
+        const order = ['decode', 'photos', 'listings', 'specs', 'build', 'recalls', 'payments', 'apr', 'tco', 'openRecalls', 'plate', 'taxes']
+        const aliases = getAliases()
+        for (const shortcut of order) {
+          const docName = aliases[shortcut] ?? shortcut
+          if (available.includes(docName)) {
+            console.log(`  ${label(shortcut.padEnd(16))} ${hint(docName)}`)
+          }
         }
+        console.log()
         return
       }
 
       const doc = getDoc(query)
       if (doc) {
+        console.log(`\n${brand('auto.dev')} ${hint('docs')} ${value(query)}\n`)
         console.log(doc)
         return
       }
 
       const results = searchDocs(query)
       if (results.length === 0) {
-        console.log(`No docs found for "${query}".`)
-        console.log('Available: ' + listDocs().join(', '))
+        console.log(formatError(`No docs found for "${query}"`))
+        const available = listDocs()
+        if (available.length > 0) {
+          console.log(`  ${hint('Available:')} ${available.map(n => value(n)).join(hint(', '))}`)
+        }
         return
       }
 
+      console.log(`\n${brand('auto.dev')} ${hint('docs')} ${value(results[0]!.name)}\n`)
       console.log(results[0]!.content)
       if (results.length > 1) {
-        console.log(`\nAlso related: ${results.slice(1).map((r) => r.name).join(', ')}`)
+        console.log(`\n${hint('Also related:')} ${results.slice(1).map((r) => value(r.name)).join(hint(', '))}`)
       }
     })
 

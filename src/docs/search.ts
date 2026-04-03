@@ -6,6 +6,27 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 // At runtime this file is bundled into dist/ as a chunk, so docs/ is a sibling
 const DOCS_DIR = join(__dirname, 'docs')
 
+// Map explore/CLI command names to doc file names
+const ALIASES: Record<string, string> = {
+  decode: 'vin-decode',
+  photos: 'vehicle-photos',
+  listings: 'vehicle-listings',
+  specs: 'specifications',
+  build: 'oem-build-data',
+  recalls: 'vehicle-recalls',
+  payments: 'vehicle-payments',
+  apr: 'interest-rates',
+  tco: 'total-cost-ownership',
+  openRecalls: 'open-recalls',
+  'open-recalls': 'open-recalls',
+  plate: 'plate-to-vin',
+  taxes: 'taxes-fees',
+}
+
+export function getAliases(): Record<string, string> {
+  return ALIASES
+}
+
 export interface DocEntry {
   name: string
   filename: string
@@ -20,7 +41,8 @@ export function listDocs(): string[] {
 }
 
 export function getDoc(name: string): string | null {
-  const filePath = join(DOCS_DIR, `${name}.md`)
+  const resolved = ALIASES[name] ?? name
+  const filePath = join(DOCS_DIR, `${resolved}.md`)
   if (!existsSync(filePath)) return null
   return readFileSync(filePath, 'utf-8')
 }
@@ -47,11 +69,25 @@ export function searchDocs(query: string): DocEntry[] {
     }
   }
 
-  // Sort: name matches first
+  // Sort by relevance: exact > last segment match > starts-with > shorter name (more specific) > content-only
+  const queryLower = query.toLowerCase().replace(/([A-Z])/g, (m) => '-' + m.toLowerCase()) // camelCase → kebab
   results.sort((a, b) => {
-    const aName = terms.some((t) => a.name.toLowerCase().includes(t)) ? 0 : 1
-    const bName = terms.some((t) => b.name.toLowerCase().includes(t)) ? 0 : 1
-    return aName - bName
+    const aLower = a.name.toLowerCase()
+    const bLower = b.name.toLowerCase()
+    const aLastSeg = aLower.split('-').pop() ?? ''
+    const bLastSeg = bLower.split('-').pop() ?? ''
+    const aScore = aLower === queryLower ? 0
+      : aLastSeg === queryLower ? 1          // "recalls" matches vehicle-recalls (last segment)
+      : aLower.startsWith(queryLower) ? 2    // "open" matches open-recalls
+      : aLower.includes(queryLower) ? 3
+      : 4
+    const bScore = bLower === queryLower ? 0
+      : bLastSeg === queryLower ? 1
+      : bLower.startsWith(queryLower) ? 2
+      : bLower.includes(queryLower) ? 3
+      : 4
+    if (aScore !== bScore) return aScore - bScore
+    return aLower.length - bLower.length     // shorter name = more specific
   })
 
   return results
