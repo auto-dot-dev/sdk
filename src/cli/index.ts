@@ -5,6 +5,7 @@ import { buildLoginCommand, buildLogoutCommand, buildWhoamiCommand } from './aut
 import { buildApiCommands } from './commands'
 import { buildExploreCommand } from './explore'
 import { buildMcpCommand } from './mcp-install'
+import { buildConfigCommand } from './config'
 import { startMcpServer } from '../mcp/server'
 import { getValidToken } from '../auth/oauth'
 import { listDocs, getDoc, searchDocs, getAliases } from '../docs/search.js'
@@ -33,6 +34,7 @@ if (process.argv.includes('--mcp')) {
   program.addCommand(buildWhoamiCommand())
   program.addCommand(buildExploreCommand())
   program.addCommand(buildMcpCommand())
+  program.addCommand(buildConfigCommand())
 
   const orgs = new Command('orgs').description('Manage organizations')
   orgs.command('list').description('List your organizations').action(() => {
