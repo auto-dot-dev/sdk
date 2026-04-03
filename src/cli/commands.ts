@@ -1,6 +1,8 @@
 import { Command } from 'commander'
 import { getValidToken } from '../auth/oauth'
 import { formatError, formatSuccess, brand, value, hint, label, limeGreen, brown, yellowNum, purple, red } from './colors'
+import { stripMetadata, resolveRaw } from '../core/strip'
+import { loadConfig } from '../core/config'
 
 const BASE_URL = process.env.AUTODEV_BASE_URL ?? 'https://api.auto.dev'
 
@@ -18,7 +20,7 @@ async function getApiKey(options: Record<string, string>): Promise<string> {
   return apiKey as string
 }
 
-async function apiGet(path: string, apiKey: string): Promise<unknown> {
+async function apiGet(path: string, apiKey: string, options?: { raw?: boolean }): Promise<unknown> {
   const url = `${BASE_URL}${path}`
   if (process.env.DEBUG) {
     console.error(`[DEBUG] GET ${url}`)
@@ -63,7 +65,13 @@ async function apiGet(path: string, apiKey: string): Promise<unknown> {
   const endpoint = path.split('?')[0].split('/').filter(Boolean)[0] ?? path
   console.error(formatSuccess(`${brand(endpoint)}  ${hint(String(response.status))}  ${hint(elapsed + 's')}`))
   console.error()
-  return response.json()
+  const data = await response.json() as Record<string, unknown>
+  const config = loadConfig()
+  const isRaw = resolveRaw({
+    consumer: options?.raw,
+    config: config.raw,
+  })
+  return isRaw ? data : stripMetadata(data)
 }
 
 function colorizeJson(json: string): string {
@@ -124,6 +132,7 @@ function outputOptions(cmd: Command): Command {
     .option('--json', 'Output as JSON')
     .option('--table', 'Output as table (default)')
     .option('--yaml', 'Output as YAML')
+    .option('--raw', 'Show full API response including metadata')
     .option('--api-key <key>', 'API key (overrides stored credentials)')
 }
 
@@ -143,7 +152,7 @@ export function buildApiCommands(): Command[] {
       .argument('<vin>', 'Vehicle Identification Number'),
   ).action(async (vin, options) => {
     const apiKey = await getApiKey(options)
-    const data = await apiGet(`/vin/${vin}`, apiKey)
+    const data = await apiGet(`/vin/${vin}`, apiKey, { raw: options.raw })
     console.log(formatOutput(data, getFormat(options)))
   })
   commands.push(decode)
@@ -155,7 +164,7 @@ export function buildApiCommands(): Command[] {
       .argument('<vin>', 'Vehicle Identification Number'),
   ).action(async (vin, options) => {
     const apiKey = await getApiKey(options)
-    const data = await apiGet(`/photos/${vin}`, apiKey)
+    const data = await apiGet(`/photos/${vin}`, apiKey, { raw: options.raw })
     console.log(formatOutput(data, getFormat(options)))
   })
   commands.push(photos)
@@ -191,7 +200,7 @@ export function buildApiCommands(): Command[] {
       if (options.page) params.set('page', options.page)
       if (options.limit) params.set('limit', options.limit)
       const query = params.toString() ? `?${params.toString()}` : ''
-      const data = await apiGet(`/listings${query}`, apiKey)
+      const data = await apiGet(`/listings${query}`, apiKey, { raw: options.raw })
       console.log(formatOutput(data, getFormat(options)))
     })
   commands.push(listings)
@@ -203,7 +212,7 @@ export function buildApiCommands(): Command[] {
       .argument('<vin>', 'Vehicle Identification Number'),
   ).action(async (vin, options) => {
     const apiKey = await getApiKey(options)
-    const data = await apiGet(`/specs/${vin}`, apiKey)
+    const data = await apiGet(`/specs/${vin}`, apiKey, { raw: options.raw })
     console.log(formatOutput(data, getFormat(options)))
   })
   commands.push(specs)
@@ -215,7 +224,7 @@ export function buildApiCommands(): Command[] {
       .argument('<vin>', 'Vehicle Identification Number'),
   ).action(async (vin, options) => {
     const apiKey = await getApiKey(options)
-    const data = await apiGet(`/build/${vin}`, apiKey)
+    const data = await apiGet(`/build/${vin}`, apiKey, { raw: options.raw })
     console.log(formatOutput(data, getFormat(options)))
   })
   commands.push(build)
@@ -227,7 +236,7 @@ export function buildApiCommands(): Command[] {
       .argument('<vin>', 'Vehicle Identification Number'),
   ).action(async (vin, options) => {
     const apiKey = await getApiKey(options)
-    const data = await apiGet(`/recalls/${vin}`, apiKey)
+    const data = await apiGet(`/recalls/${vin}`, apiKey, { raw: options.raw })
     console.log(formatOutput(data, getFormat(options)))
   })
   commands.push(recalls)
@@ -254,7 +263,7 @@ export function buildApiCommands(): Command[] {
       if (options.docFee) params.set('docFee', options.docFee)
       if (options.tradeIn) params.set('tradeIn', options.tradeIn)
       const query = params.toString() ? `?${params.toString()}` : ''
-      const data = await apiGet(`/payments/${vin}${query}`, apiKey)
+      const data = await apiGet(`/payments/${vin}${query}`, apiKey, { raw: options.raw })
       console.log(formatOutput(data, getFormat(options)))
     })
   commands.push(payments)
@@ -283,7 +292,7 @@ export function buildApiCommands(): Command[] {
       if (options.vehicleAge) params.set('vehicleAge', options.vehicleAge)
       if (options.vehicleMileage) params.set('vehicleMileage', options.vehicleMileage)
       const query = params.toString() ? `?${params.toString()}` : ''
-      const data = await apiGet(`/apr/${vin}${query}`, apiKey)
+      const data = await apiGet(`/apr/${vin}${query}`, apiKey, { raw: options.raw })
       console.log(formatOutput(data, getFormat(options)))
     })
   commands.push(apr)
@@ -302,7 +311,7 @@ export function buildApiCommands(): Command[] {
       if (options.zip) params.set('zip', options.zip)
       if (options.fromZip) params.set('fromZip', options.fromZip)
       const query = params.toString() ? `?${params.toString()}` : ''
-      const data = await apiGet(`/tco/${vin}${query}`, apiKey)
+      const data = await apiGet(`/tco/${vin}${query}`, apiKey, { raw: options.raw })
       console.log(formatOutput(data, getFormat(options)))
     })
   commands.push(tco)
@@ -314,7 +323,7 @@ export function buildApiCommands(): Command[] {
       .argument('<vin>', 'Vehicle Identification Number'),
   ).action(async (vin, options) => {
     const apiKey = await getApiKey(options)
-    const data = await apiGet(`/openrecalls/${vin}`, apiKey)
+    const data = await apiGet(`/openrecalls/${vin}`, apiKey, { raw: options.raw })
     console.log(formatOutput(data, getFormat(options)))
   })
   commands.push(openRecalls)
@@ -327,7 +336,7 @@ export function buildApiCommands(): Command[] {
       .argument('<plate>', 'License plate number'),
   ).action(async (state, plate, options) => {
     const apiKey = await getApiKey(options)
-    const data = await apiGet(`/plate/${state}/${plate}`, apiKey)
+    const data = await apiGet(`/plate/${state}/${plate}`, apiKey, { raw: options.raw })
     console.log(formatOutput(data, getFormat(options)))
   })
   commands.push(plate)
@@ -356,7 +365,7 @@ export function buildApiCommands(): Command[] {
       if (options.downPayment) params.set('downPayment', options.downPayment)
       if (options.months) params.set('months', options.months)
       const query = params.toString() ? `?${params.toString()}` : ''
-      const data = await apiGet(`/taxes/${vin}${query}`, apiKey)
+      const data = await apiGet(`/taxes/${vin}${query}`, apiKey, { raw: options.raw })
       console.log(formatOutput(data, getFormat(options)))
     })
   commands.push(taxes)
@@ -367,7 +376,7 @@ export function buildApiCommands(): Command[] {
       .description('Get account usage statistics'),
   ).action(async (options) => {
     const apiKey = await getApiKey(options)
-    const data = await apiGet('/usage', apiKey)
+    const data = await apiGet('/usage', apiKey, { raw: options.raw })
     console.log(formatOutput(data, getFormat(options)))
   })
   commands.push(usage)
