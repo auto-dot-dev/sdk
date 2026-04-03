@@ -42,9 +42,9 @@ export class AutoDevClient {
 
     if (!response.ok) {
       const body = await response.json().catch(() => ({ error: response.statusText }))
-      const errorBody = body as { error?: string; suggestion?: string }
+      const errorBody = body as { error?: string; suggestion?: string; upgradeLink?: string }
       const code = this.statusToCode(response.status)
-      const suggestion = this.getSuggestion(response.status, definition.tier)
+      const suggestion = this.getSuggestion(response.status, definition.tier, errorBody.upgradeLink)
       throw new AutoDevError(response.status, code, errorBody.error ?? response.statusText, suggestion)
     }
 
@@ -89,6 +89,7 @@ export class AutoDevClient {
     switch (status) {
       case 401:
         return 'UNAUTHORIZED'
+      case 402:
       case 403:
         return 'PLAN_REQUIRED'
       case 404:
@@ -100,9 +101,13 @@ export class AutoDevClient {
     }
   }
 
-  private getSuggestion(status: number, tier: string): string | undefined {
+  private getSuggestion(status: number, tier: string, upgradeLink?: string): string | undefined {
     if (status === 401) return 'Check your API key at auto.dev/dashboard/api-keys'
-    if (status === 403) return `This endpoint requires a ${tier.charAt(0).toUpperCase() + tier.slice(1)} plan. Upgrade at auto.dev/pricing`
+    if (status === 402 || status === 403) {
+      const tierName = tier.charAt(0).toUpperCase() + tier.slice(1)
+      const link = upgradeLink ?? `https://auto.dev/pricing?tier=${tierName}`
+      return `This endpoint requires a ${tierName} plan. Upgrade at ${link}`
+    }
     if (status === 429) return 'Rate limit exceeded. Wait and retry, or upgrade your plan for higher limits.'
     return undefined
   }

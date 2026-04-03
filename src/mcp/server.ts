@@ -2,6 +2,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod'
 import { AutoDevClient } from '../core/client.js'
+import { AutoDevError } from '../errors.js'
 import { ENDPOINTS } from '../core/endpoints.js'
 import { searchDocs, getDoc, listDocs } from '../docs/search.js'
 
@@ -206,20 +207,36 @@ export function createMcpServer(options: McpServerOptions): McpServer {
     version: '1.0.0',
   })
 
+  // Wrap tool handlers to catch plan errors and return helpful messages
+  function handleError(err: unknown): { content: { type: 'text'; text: string }[] } {
+    if (err instanceof AutoDevError && err.code === 'PLAN_REQUIRED') {
+      const msg = `⚠️ Plan upgrade required: ${err.message}\n\n${err.suggestion ?? 'Visit https://auto.dev/pricing to upgrade your plan.'}`
+      return { content: [{ type: 'text', text: msg }] }
+    }
+    if (err instanceof AutoDevError) {
+      return { content: [{ type: 'text', text: `Error ${err.status}: ${err.message}${err.suggestion ? `\n\n${err.suggestion}` : ''}` }] }
+    }
+    return { content: [{ type: 'text', text: `Error: ${(err as Error).message}` }] }
+  }
+
   server.registerTool('auto_decode', {
     description: ENDPOINTS.decode.description,
     inputSchema: { vin: z.string().describe('Vehicle Identification Number') },
   }, async ({ vin }) => {
-    const data = await client.request('decode', { vin })
-    return { content: [{ type: 'text', text: JSON.stringify(data) }] }
+    try {
+      const data = await client.request('decode', { vin })
+      return { content: [{ type: 'text', text: JSON.stringify(data) }] }
+    } catch (err) { return handleError(err) }
   })
 
   server.registerTool('auto_photos', {
     description: ENDPOINTS.photos.description,
     inputSchema: { vin: z.string().describe('Vehicle Identification Number') },
   }, async ({ vin }) => {
-    const data = await client.request('photos', { vin })
-    return { content: [{ type: 'text', text: JSON.stringify(data) }] }
+    try {
+      const data = await client.request('photos', { vin })
+      return { content: [{ type: 'text', text: JSON.stringify(data) }] }
+    } catch (err) { return handleError(err) }
   })
 
   server.registerTool('auto_listings', {
@@ -238,44 +255,52 @@ export function createMcpServer(options: McpServerOptions): McpServer {
       limit: z.string().optional().describe('Results per page (1-100)'),
     },
   }, async (args) => {
-    const query: Record<string, string> = {}
-    if (args.make) query['vehicle.make'] = args.make
-    if (args.model) query['vehicle.model'] = args.model
-    if (args.year) query['vehicle.year'] = args.year
-    if (args.trim) query['vehicle.trim'] = args.trim
-    if (args.bodyStyle) query['vehicle.bodyStyle'] = args.bodyStyle
-    if (args.price) query['retailListing.price'] = args.price
-    if (args.miles) query['retailListing.miles'] = args.miles
-    if (args.state) query['retailListing.state'] = args.state
-    if (args.sort) query['sort'] = args.sort
-    if (args.page) query['page'] = args.page
-    if (args.limit) query['limit'] = args.limit
-    const data = await client.request('listings', { query })
-    return { content: [{ type: 'text', text: JSON.stringify(data) }] }
+    try {
+      const query: Record<string, string> = {}
+      if (args.make) query['vehicle.make'] = args.make
+      if (args.model) query['vehicle.model'] = args.model
+      if (args.year) query['vehicle.year'] = args.year
+      if (args.trim) query['vehicle.trim'] = args.trim
+      if (args.bodyStyle) query['vehicle.bodyStyle'] = args.bodyStyle
+      if (args.price) query['retailListing.price'] = args.price
+      if (args.miles) query['retailListing.miles'] = args.miles
+      if (args.state) query['retailListing.state'] = args.state
+      if (args.sort) query['sort'] = args.sort
+      if (args.page) query['page'] = args.page
+      if (args.limit) query['limit'] = args.limit
+      const data = await client.request('listings', { query })
+      return { content: [{ type: 'text', text: JSON.stringify(data) }] }
+    } catch (err) { return handleError(err) }
   })
 
   server.registerTool('auto_specs', {
     description: ENDPOINTS.specs.description,
     inputSchema: { vin: z.string().describe('Vehicle Identification Number') },
   }, async ({ vin }) => {
-    const data = await client.request('specs', { vin })
-    return { content: [{ type: 'text', text: JSON.stringify(data) }] }
+    try {
+      const data = await client.request('specs', { vin })
+      return { content: [{ type: 'text', text: JSON.stringify(data) }] }
+    } catch (err) { return handleError(err) }
   })
 
   server.registerTool('auto_build', {
     description: ENDPOINTS.build.description,
     inputSchema: { vin: z.string().describe('Vehicle Identification Number') },
   }, async ({ vin }) => {
-    const data = await client.request('build', { vin })
-    return { content: [{ type: 'text', text: JSON.stringify(data) }] }
+    try {
+      const data = await client.request('build', { vin })
+      return { content: [{ type: 'text', text: JSON.stringify(data) }] }
+    } catch (err) { return handleError(err) }
   })
 
   server.registerTool('auto_recalls', {
     description: ENDPOINTS.recalls.description,
     inputSchema: { vin: z.string().describe('Vehicle Identification Number') },
   }, async ({ vin }) => {
-    const data = await client.request('recalls', { vin })
-    return { content: [{ type: 'text', text: JSON.stringify(data) }] }
+    try {
+      const data = await client.request('recalls', { vin })
+      return { content: [{ type: 'text', text: JSON.stringify(data) }] }
+    } catch (err) { return handleError(err) }
   })
 
   server.registerTool('auto_payments', {
@@ -290,12 +315,14 @@ export function createMcpServer(options: McpServerOptions): McpServer {
       tradeIn: z.string().optional().describe('Trade-in vehicle value'),
     },
   }, async ({ vin, ...rest }) => {
-    const query: Record<string, string> = {}
-    for (const [k, v] of Object.entries(rest)) {
-      if (v !== undefined) query[k] = v
-    }
-    const data = await client.request('payments', { vin, query })
-    return { content: [{ type: 'text', text: JSON.stringify(data) }] }
+    try {
+      const query: Record<string, string> = {}
+      for (const [k, v] of Object.entries(rest)) {
+        if (v !== undefined) query[k] = v
+      }
+      const data = await client.request('payments', { vin, query })
+      return { content: [{ type: 'text', text: JSON.stringify(data) }] }
+    } catch (err) { return handleError(err) }
   })
 
   server.registerTool('auto_apr', {
@@ -311,12 +338,14 @@ export function createMcpServer(options: McpServerOptions): McpServer {
       vehicleMileage: z.string().optional().describe('Current vehicle mileage'),
     },
   }, async ({ vin, ...rest }) => {
-    const query: Record<string, string> = {}
-    for (const [k, v] of Object.entries(rest)) {
-      if (v !== undefined) query[k] = v
-    }
-    const data = await client.request('apr', { vin, query })
-    return { content: [{ type: 'text', text: JSON.stringify(data) }] }
+    try {
+      const query: Record<string, string> = {}
+      for (const [k, v] of Object.entries(rest)) {
+        if (v !== undefined) query[k] = v
+      }
+      const data = await client.request('apr', { vin, query })
+      return { content: [{ type: 'text', text: JSON.stringify(data) }] }
+    } catch (err) { return handleError(err) }
   })
 
   server.registerTool('auto_tco', {
@@ -327,19 +356,23 @@ export function createMcpServer(options: McpServerOptions): McpServer {
       fromZip: z.string().optional().describe('ZIP code for delivery/transport calculations'),
     },
   }, async ({ vin, zip, fromZip }) => {
-    const query: Record<string, string> = {}
-    if (zip) query['zip'] = zip
-    if (fromZip) query['fromZip'] = fromZip
-    const data = await client.request('tco', { vin, query })
-    return { content: [{ type: 'text', text: JSON.stringify(data) }] }
+    try {
+      const query: Record<string, string> = {}
+      if (zip) query['zip'] = zip
+      if (fromZip) query['fromZip'] = fromZip
+      const data = await client.request('tco', { vin, query })
+      return { content: [{ type: 'text', text: JSON.stringify(data) }] }
+    } catch (err) { return handleError(err) }
   })
 
   server.registerTool('auto_open_recalls', {
     description: ENDPOINTS.openRecalls.description,
     inputSchema: { vin: z.string().describe('Vehicle Identification Number') },
   }, async ({ vin }) => {
-    const data = await client.request('openRecalls', { vin })
-    return { content: [{ type: 'text', text: JSON.stringify(data) }] }
+    try {
+      const data = await client.request('openRecalls', { vin })
+      return { content: [{ type: 'text', text: JSON.stringify(data) }] }
+    } catch (err) { return handleError(err) }
   })
 
   server.registerTool('auto_plate', {
@@ -349,8 +382,10 @@ export function createMcpServer(options: McpServerOptions): McpServer {
       plate: z.string().describe('License plate number'),
     },
   }, async ({ state, plate }) => {
-    const data = await client.request('plate', { state, plate })
-    return { content: [{ type: 'text', text: JSON.stringify(data) }] }
+    try {
+      const data = await client.request('plate', { state, plate })
+      return { content: [{ type: 'text', text: JSON.stringify(data) }] }
+    } catch (err) { return handleError(err) }
   })
 
   server.registerTool('auto_taxes', {
@@ -366,12 +401,14 @@ export function createMcpServer(options: McpServerOptions): McpServer {
       months: z.string().optional().describe('Loan term in months (default 72)'),
     },
   }, async ({ vin, ...rest }) => {
-    const query: Record<string, string> = {}
-    for (const [k, v] of Object.entries(rest)) {
-      if (v !== undefined) query[k] = v
-    }
-    const data = await client.request('taxes', { vin, query })
-    return { content: [{ type: 'text', text: JSON.stringify(data) }] }
+    try {
+      const query: Record<string, string> = {}
+      for (const [k, v] of Object.entries(rest)) {
+        if (v !== undefined) query[k] = v
+      }
+      const data = await client.request('taxes', { vin, query })
+      return { content: [{ type: 'text', text: JSON.stringify(data) }] }
+    } catch (err) { return handleError(err) }
   })
 
   server.registerTool('auto_docs', {

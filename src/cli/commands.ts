@@ -1,6 +1,6 @@
 import { Command } from 'commander'
 import { getValidToken } from '../auth/oauth'
-import { formatError, formatSuccess, brand, value, hint, label, limeGreen, brown, yellowNum, red } from './colors'
+import { formatError, formatSuccess, brand, value, hint, label, limeGreen, brown, yellowNum, purple, red } from './colors'
 
 const BASE_URL = process.env.AUTODEV_BASE_URL ?? 'https://api.auto.dev'
 
@@ -34,6 +34,18 @@ async function apiGet(path: string, apiKey: string): Promise<unknown> {
   const elapsed = ((Date.now() - start) / 1000).toFixed(2)
   if (!response.ok) {
     const body = await response.json().catch(() => ({ error: response.statusText }))
+
+    // Plan upgrade required (402)
+    if (response.status === 402) {
+      const upgradeLink = body?.upgradeLink ?? 'https://auto.dev/pricing'
+      const tier = upgradeLink.match(/tier=(\w+)/)?.[1] ?? 'a higher'
+      const endpointName = path.split('?')[0].split('/').filter(Boolean)[0] ?? path
+      console.error(formatError(`${brand(endpointName)} requires a ${purple(tier)} plan`))
+      console.error(`\n  ${hint('Upgrade your plan:')} ${limeGreen(upgradeLink)}`)
+      console.error(`  ${hint('Manage account:')}   ${limeGreen('https://auto.dev/dashboard')}\n`)
+      process.exit(1)
+    }
+
     let errorMsg: string
     if (body?.error && typeof body.error === 'object' && body.error.error) {
       errorMsg = body.error.error
