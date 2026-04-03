@@ -3,3 +3,7 @@ export type { AprOptions, AutoDevClientOptions, AutoDevResponse, ListingsFilters
 export type { AutoDevErrorCode } from './errors'
 export { AutoDevError } from './errors'
 export { AutoDev } from './sdk/index'
+export { stripMetadata, resolveRaw, METADATA_KEYS } from './core/strip'
+export type { RawOptions } from './core/strip'
+export { loadConfig, saveConfig } from './core/config'
+export type { Config } from './core/config'
