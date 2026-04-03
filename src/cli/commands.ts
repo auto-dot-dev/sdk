@@ -1,6 +1,6 @@
 import { Command } from 'commander'
 import { getValidToken } from '../auth/oauth'
-import { formatError, red } from './colors'
+import { formatError, formatSuccess, brand, value, hint, label, red } from './colors'
 
 const BASE_URL = process.env.AUTODEV_BASE_URL ?? 'https://api.auto.dev'
 
@@ -24,12 +24,14 @@ async function apiGet(path: string, apiKey: string): Promise<unknown> {
     console.error(`[DEBUG] GET ${url}`)
     console.error(`[DEBUG] Token: ${apiKey.substring(0, 10)}...${apiKey.substring(apiKey.length - 5)}`)
   }
+  const start = Date.now()
   const response = await fetch(url, {
     headers: {
       Authorization: `Bearer ${apiKey}`,
       Accept: 'application/json',
     },
   })
+  const elapsed = ((Date.now() - start) / 1000).toFixed(2)
   if (!response.ok) {
     const body = await response.json().catch(() => ({ error: response.statusText }))
     let errorMsg: string
@@ -45,7 +47,15 @@ async function apiGet(path: string, apiKey: string): Promise<unknown> {
     console.error(formatError(`${response.status}: ${errorMsg}`))
     process.exit(1)
   }
+  // Extract endpoint name from path
+  const endpoint = path.split('/').filter(Boolean)[0] ?? path
+  console.error(formatSuccess(`${brand(endpoint)}  ${hint(String(response.status))}  ${hint(elapsed + 's')}`))
+  console.error()
   return response.json()
+}
+
+function colorizeJson(json: string): string {
+  return json.replace(/"([^"]+)":/g, (_, key) => `${value(`"${key}"`)}:`)
 }
 
 function formatOutput(data: unknown, format: string): string {
@@ -64,7 +74,7 @@ function formatOutput(data: unknown, format: string): string {
     )
     return [keys.join('\t'), ...rows].join('\n')
   }
-  return JSON.stringify(data, null, 2)
+  return colorizeJson(JSON.stringify(data, null, 2))
 }
 
 function toYaml(obj: unknown, indent: number): string {
