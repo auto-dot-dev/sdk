@@ -1,5 +1,5 @@
 import { AutoDevClient } from '../core/client'
-import type { AprOptions, AutoDevClientOptions, AutoDevResponse, ListingsFilters, PaymentOptions, TaxOptions } from '../core/types'
+import type { AprOptions, AutoDevClientOptions, AutoDevResponse, ListingsFilters, PaymentOptions, TaxOptions, TcoOptions } from '../core/types'
 
 export class AutoDev {
   private readonly client: AutoDevClient
@@ -49,8 +49,11 @@ export class AutoDev {
     return this.client.request('apr', { vin, query })
   }
 
-  async tco(vin: string): Promise<AutoDevResponse<unknown>> {
-    return this.client.request('tco', { vin })
+  async tco(vin: string, options?: TcoOptions): Promise<AutoDevResponse<unknown>> {
+    const query = options
+      ? Object.fromEntries(Object.entries(options).map(([k, v]) => [k, String(v)]))
+      : undefined
+    return this.client.request('tco', { vin, query })
   }
 
   async openRecalls(vin: string): Promise<AutoDevResponse<unknown>> {
@@ -61,9 +64,10 @@ export class AutoDev {
     return this.client.request('plate', { state, number })
   }
 
-  async taxes(vin: string, options: TaxOptions): Promise<AutoDevResponse<unknown>> {
-    const query: Record<string, string> = {}
-    if (options.zip !== undefined) query['zip'] = options.zip
+  async taxes(vin: string, options?: TaxOptions): Promise<AutoDevResponse<unknown>> {
+    const query = options
+      ? Object.fromEntries(Object.entries(options).map(([k, v]) => [k, String(v)]))
+      : undefined
     return this.client.request('taxes', { vin, query })
   }
 
