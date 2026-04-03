@@ -1,5 +1,6 @@
 import { Command } from 'commander'
 import { ENDPOINTS, EndpointDefinition } from '../core/endpoints'
+import { brand, dim, value, accent, hint, tierBadge, label, formatError } from './colors'
 
 export interface ExploreEntry {
   name: string
@@ -139,21 +140,22 @@ export function buildExploreCommand(): Command {
       if (endpoint) {
         const detail = getEndpointDetail(endpoint)
         if (!detail) {
-          console.error(`Unknown endpoint: ${options.detail}`)
+          console.error(formatError(`Unknown endpoint: ${endpoint}`))
           process.exit(1)
         }
         if (options.json) {
           console.log(JSON.stringify(detail, null, 2))
         } else {
-          console.log(`\n${detail.name} [${detail.tier}]`)
-          console.log(`  ${detail.description}`)
-          console.log(`  ${detail.method} ${detail.path}`)
+          console.log(`\n${label(detail.name)} ${tierBadge(detail.tier)}`)
+          console.log(`  ${dim(detail.description)}`)
+          console.log(`  ${label(detail.method)} ${value(detail.path)}`)
           if (detail.parameters.length > 0) {
-            console.log('\n  Parameters:')
+            console.log(`\n  ${label('Parameters:')}`)
             for (const p of detail.parameters) {
-              const req = p.required ? '(required)' : '(optional)'
-              const mapping = p.apiParam ? `  ->  ${p.apiParam}` : ''
-              console.log(`    ${p.name} [${p.in}] ${req} — ${p.description}${mapping}`)
+              const req = p.required ? accent('(required)') : hint('(optional)')
+              const mapping = p.apiParam ? `  ${dim('->')}  ${value(p.apiParam)}` : ''
+              const loc = p.in === 'path' ? ` ${dim('[path]')}` : ''
+              console.log(`    ${label(p.name)}${loc} ${req} ${dim('—')} ${dim(p.description)}${mapping}`)
             }
           }
         }
@@ -173,9 +175,9 @@ export function buildExploreCommand(): Command {
       }
 
       for (const [tier, eps] of Object.entries(tiers)) {
-        console.log(`\n[${tier.toUpperCase()}]`)
+        console.log(`\n${tierBadge(tier)}`)
         for (const ep of eps) {
-          console.log(`  ${ep.name.padEnd(16)} ${ep.path.padEnd(28)} ${ep.description}`)
+          console.log(`  ${label(ep.name.padEnd(16))} ${value(ep.path.padEnd(28))} ${dim(ep.description)}`)
         }
       }
     })

@@ -1,5 +1,6 @@
 import { Command } from 'commander'
 import { getValidToken } from '../auth/oauth'
+import { formatError } from './colors'
 
 const BASE_URL = process.env.AUTODEV_BASE_URL ?? 'https://api.auto.dev'
 
@@ -10,7 +11,7 @@ async function getApiKey(options: Record<string, string>): Promise<string> {
     await getValidToken()
 
   if (!apiKey) {
-    console.error('No API key found. Set AUTODEV_API_KEY or run: auto login')
+    console.error(formatError('No API key found', 'Set AUTODEV_API_KEY or run: auto login'))
     process.exit(1)
   }
 
@@ -32,7 +33,7 @@ async function apiGet(path: string, apiKey: string): Promise<unknown> {
   if (!response.ok) {
     const body = await response.json().catch(() => ({ error: response.statusText }))
     const errorMsg = typeof body?.error === 'string' ? body.error : typeof body?.message === 'string' ? body.message : JSON.stringify(body)
-    throw new Error(`API error ${response.status}: ${errorMsg}`)
+    throw new Error(formatError(`API error ${response.status}: ${errorMsg}`))
   }
   return response.json()
 }
