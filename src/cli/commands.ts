@@ -40,7 +40,7 @@ async function apiGet(path: string, apiKey: string): Promise<unknown> {
       const upgradeLink = body?.upgradeLink ?? 'https://auto.dev/pricing'
       const tier = upgradeLink.match(/tier=(\w+)/)?.[1] ?? 'a higher'
       const endpointName = path.split('?')[0].split('/').filter(Boolean)[0] ?? path
-      console.error(formatError(`${brand(endpointName)} requires a ${purple(tier)} plan`))
+      console.error(formatError(`${label(endpointName)} requires a ${purple(tier)} plan`))
       console.error(`\n  ${hint('Upgrade your plan:')} ${limeGreen(upgradeLink)}`)
       console.error(`  ${hint('Manage account:')}   ${limeGreen('https://auto.dev/dashboard')}\n`)
       process.exit(1)

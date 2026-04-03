@@ -208,9 +208,13 @@ export function createMcpServer(options: McpServerOptions): McpServer {
   })
 
   // Wrap tool handlers to catch plan errors and return helpful messages
-  function handleError(err: unknown): { content: { type: 'text'; text: string }[] } {
+  function handleError(err: unknown, endpoint?: string): { content: { type: 'text'; text: string }[] } {
     if (err instanceof AutoDevError && err.code === 'PLAN_REQUIRED') {
-      const msg = `⚠️ Plan upgrade required: ${err.message}\n\n${err.suggestion ?? 'Visit https://auto.dev/pricing to upgrade your plan.'}`
+      const name = endpoint ?? 'This endpoint'
+      const tierMatch = err.suggestion?.match(/requires a (\w+) plan/)
+      const tier = tierMatch?.[1] ?? 'higher'
+      const upgradeLink = err.suggestion?.match(/Upgrade at ([^\s|]+)/)?.[1] ?? 'https://auto.dev/pricing'
+      const msg = `⚠️ ${name} requires a ${tier} plan\n\n  Upgrade your plan: ${upgradeLink}\n  Manage account:   https://auto.dev/dashboard`
       return { content: [{ type: 'text', text: msg }] }
     }
     if (err instanceof AutoDevError) {
@@ -226,7 +230,7 @@ export function createMcpServer(options: McpServerOptions): McpServer {
     try {
       const data = await client.request('decode', { vin })
       return { content: [{ type: 'text', text: JSON.stringify(data) }] }
-    } catch (err) { return handleError(err) }
+    } catch (err) { return handleError(err, 'decode') }
   })
 
   server.registerTool('auto_photos', {
@@ -236,7 +240,7 @@ export function createMcpServer(options: McpServerOptions): McpServer {
     try {
       const data = await client.request('photos', { vin })
       return { content: [{ type: 'text', text: JSON.stringify(data) }] }
-    } catch (err) { return handleError(err) }
+    } catch (err) { return handleError(err, 'photos') }
   })
 
   server.registerTool('auto_listings', {
@@ -270,7 +274,7 @@ export function createMcpServer(options: McpServerOptions): McpServer {
       if (args.limit) query['limit'] = args.limit
       const data = await client.request('listings', { query })
       return { content: [{ type: 'text', text: JSON.stringify(data) }] }
-    } catch (err) { return handleError(err) }
+    } catch (err) { return handleError(err, 'listings') }
   })
 
   server.registerTool('auto_specs', {
@@ -280,7 +284,7 @@ export function createMcpServer(options: McpServerOptions): McpServer {
     try {
       const data = await client.request('specs', { vin })
       return { content: [{ type: 'text', text: JSON.stringify(data) }] }
-    } catch (err) { return handleError(err) }
+    } catch (err) { return handleError(err, 'specs') }
   })
 
   server.registerTool('auto_build', {
@@ -290,7 +294,7 @@ export function createMcpServer(options: McpServerOptions): McpServer {
     try {
       const data = await client.request('build', { vin })
       return { content: [{ type: 'text', text: JSON.stringify(data) }] }
-    } catch (err) { return handleError(err) }
+    } catch (err) { return handleError(err, 'build') }
   })
 
   server.registerTool('auto_recalls', {
@@ -300,7 +304,7 @@ export function createMcpServer(options: McpServerOptions): McpServer {
     try {
       const data = await client.request('recalls', { vin })
       return { content: [{ type: 'text', text: JSON.stringify(data) }] }
-    } catch (err) { return handleError(err) }
+    } catch (err) { return handleError(err, 'recalls') }
   })
 
   server.registerTool('auto_payments', {
@@ -322,7 +326,7 @@ export function createMcpServer(options: McpServerOptions): McpServer {
       }
       const data = await client.request('payments', { vin, query })
       return { content: [{ type: 'text', text: JSON.stringify(data) }] }
-    } catch (err) { return handleError(err) }
+    } catch (err) { return handleError(err, 'payments') }
   })
 
   server.registerTool('auto_apr', {
@@ -345,7 +349,7 @@ export function createMcpServer(options: McpServerOptions): McpServer {
       }
       const data = await client.request('apr', { vin, query })
       return { content: [{ type: 'text', text: JSON.stringify(data) }] }
-    } catch (err) { return handleError(err) }
+    } catch (err) { return handleError(err, 'apr') }
   })
 
   server.registerTool('auto_tco', {
@@ -362,7 +366,7 @@ export function createMcpServer(options: McpServerOptions): McpServer {
       if (fromZip) query['fromZip'] = fromZip
       const data = await client.request('tco', { vin, query })
       return { content: [{ type: 'text', text: JSON.stringify(data) }] }
-    } catch (err) { return handleError(err) }
+    } catch (err) { return handleError(err, 'tco') }
   })
 
   server.registerTool('auto_open_recalls', {
@@ -372,7 +376,7 @@ export function createMcpServer(options: McpServerOptions): McpServer {
     try {
       const data = await client.request('openRecalls', { vin })
       return { content: [{ type: 'text', text: JSON.stringify(data) }] }
-    } catch (err) { return handleError(err) }
+    } catch (err) { return handleError(err, 'open-recalls') }
   })
 
   server.registerTool('auto_plate', {
@@ -385,7 +389,7 @@ export function createMcpServer(options: McpServerOptions): McpServer {
     try {
       const data = await client.request('plate', { state, plate })
       return { content: [{ type: 'text', text: JSON.stringify(data) }] }
-    } catch (err) { return handleError(err) }
+    } catch (err) { return handleError(err, 'plate') }
   })
 
   server.registerTool('auto_taxes', {
@@ -408,7 +412,7 @@ export function createMcpServer(options: McpServerOptions): McpServer {
       }
       const data = await client.request('taxes', { vin, query })
       return { content: [{ type: 'text', text: JSON.stringify(data) }] }
-    } catch (err) { return handleError(err) }
+    } catch (err) { return handleError(err, 'taxes') }
   })
 
   server.registerTool('auto_docs', {

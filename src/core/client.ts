@@ -106,7 +106,7 @@ export class AutoDevClient {
     if (status === 402 || status === 403) {
       const tierName = tier.charAt(0).toUpperCase() + tier.slice(1)
       const link = upgradeLink ?? `https://auto.dev/pricing?tier=${tierName}`
-      return `This endpoint requires a ${tierName} plan. Upgrade at ${link}`
+      return `This endpoint requires a ${tierName} plan. Upgrade at ${link} | Manage account: https://auto.dev/dashboard`
     }
     if (status === 429) return 'Rate limit exceeded. Wait and retry, or upgrade your plan for higher limits.'
     return undefined
