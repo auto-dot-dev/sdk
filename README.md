@@ -50,7 +50,19 @@ auto docs [query]                   # search bundled API docs
 auto explore [endpoint]             # browse params and mappings
 ```
 
-All commands support `--json`, `--yaml`, and `--api-key <key>` flags. Use `npx @auto.dev/sdk` in place of `auto` if not installed globally.
+All commands support `--json`, `--yaml`, `--raw`, and `--api-key <key>` flags. Use `npx @auto.dev/sdk` in place of `auto` if not installed globally.
+
+API metadata is stripped by default — you get clean vehicle data. Use `--raw` to see the full API response.
+
+### Configuration
+
+```bash
+auto config set raw true    # always show full responses
+auto config get raw         # check current value
+auto config list            # show all settings
+```
+
+Settings are stored in `~/.auto-dev/config.json`.
 
 ## MCP Server
 
@@ -77,6 +89,8 @@ This installs the package globally (so MCP clients can find the `auto` binary) a
 | `auto_plate` | License plate to VIN | Scale |
 | `auto_taxes` | Taxes and fees | Scale |
 | `auto_docs` | Search bundled API documentation | — |
+| `auto_config_set` | Set a config value (e.g. `raw: true`) | — |
+| `auto_config_get` | Get a config value or list all settings | — |
 
 ## SDK
 
@@ -88,6 +102,8 @@ npm install @auto.dev/sdk
 import { AutoDev } from '@auto.dev/sdk'
 
 const auto = new AutoDev({ apiKey: process.env.AUTODEV_API_KEY })
+// API metadata is stripped by default. Pass raw: true to get full responses:
+// const auto = new AutoDev({ apiKey: process.env.AUTODEV_API_KEY, raw: true })
 
 // VIN decode
 const vehicle = await auto.decode('1HGCM82633A004352')
