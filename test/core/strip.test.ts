@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { stripMetadata, METADATA_KEYS } from '../../src/core/strip'
+import { stripMetadata, resolveRaw, METADATA_KEYS } from '../../src/core/strip'
 
 describe('stripMetadata', () => {
   it('removes all metadata keys', () => {
@@ -59,5 +59,30 @@ describe('stripMetadata', () => {
 
   it('blocklist contains exactly the expected keys', () => {
     expect(METADATA_KEYS).toEqual(['api', 'links', 'user', 'examples', 'discover', 'actions'])
+  })
+})
+
+describe('resolveRaw', () => {
+  it('returns false by default (stripped)', () => {
+    expect(resolveRaw()).toBe(false)
+  })
+
+  it('per-request overrides all', () => {
+    expect(resolveRaw({ perRequest: true })).toBe(true)
+    expect(resolveRaw({ perRequest: false, consumer: true, config: true })).toBe(false)
+  })
+
+  it('consumer-level overrides config', () => {
+    expect(resolveRaw({ consumer: true })).toBe(true)
+    expect(resolveRaw({ consumer: false, config: true })).toBe(false)
+  })
+
+  it('config is lowest priority', () => {
+    expect(resolveRaw({ config: true })).toBe(true)
+    expect(resolveRaw({ config: false })).toBe(false)
+  })
+
+  it('skips undefined values in chain', () => {
+    expect(resolveRaw({ perRequest: undefined, consumer: undefined, config: true })).toBe(true)
   })
 })
