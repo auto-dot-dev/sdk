@@ -1,6 +1,8 @@
 import { createAuthHeaders } from '../auth/api-key'
 import { AutoDevError, type AutoDevErrorCode } from '../errors'
 import { ENDPOINTS, type EndpointDefinition } from './endpoints'
+import { stripMetadata, resolveRaw } from './strip'
+import { loadConfig } from './config'
 import type { AutoDevClientOptions, AutoDevResponse } from './types'
 
 export { ENDPOINTS } from './endpoints'
@@ -12,17 +14,20 @@ interface RequestParams {
   number?: string
   plate?: string
   query?: Record<string, string>
+  raw?: boolean
 }
 
 export class AutoDevClient {
   private readonly baseUrl: string
   private readonly apiKey: string
   private readonly org?: string
+  private readonly raw?: boolean
 
   constructor(options: AutoDevClientOptions) {
     this.apiKey = options.apiKey
     this.org = options.org
     this.baseUrl = options.baseUrl ?? 'https://api.auto.dev'
+    this.raw = options.raw
   }
 
   async request<T = unknown>(endpoint: string, params?: RequestParams): Promise<AutoDevResponse<T>> {
@@ -48,7 +53,14 @@ export class AutoDevClient {
       throw new AutoDevError(response.status, code, errorBody.error ?? response.statusText, suggestion)
     }
 
-    const data = (await response.json()) as T
+    const rawData = (await response.json()) as T
+    const config = loadConfig()
+    const isRaw = resolveRaw({
+      perRequest: params?.raw,
+      consumer: this.raw,
+      config: config.raw,
+    })
+    const data = isRaw ? rawData : stripMetadata(rawData as Record<string, unknown>) as T
 
     return {
       data,

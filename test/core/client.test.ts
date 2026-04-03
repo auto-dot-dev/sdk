@@ -95,4 +95,63 @@ describe('AutoDevClient', () => {
 
     fetchSpy.mockRestore()
   })
+
+  describe('response stripping', () => {
+    it('strips metadata by default', async () => {
+      const mockResponse = {
+        api: { name: 'api.auto.dev' },
+        links: { home: 'https://api.auto.dev' },
+        user: { name: 'Test' },
+        examples: {},
+        discover: {},
+        actions: {},
+        make: 'Kia',
+        model: 'Soul',
+      }
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+        new Response(JSON.stringify(mockResponse), {
+          status: 200,
+          headers: { 'content-type': 'application/json', 'x-request-id': 'req_strip' },
+        }),
+      )
+      const client = new AutoDevClient({ apiKey: 'test-key' })
+      const result = await client.request('decode', { vin: '1HGCM82633A004352' })
+      expect(result.data).toEqual({ make: 'Kia', model: 'Soul' })
+      fetchSpy.mockRestore()
+    })
+
+    it('returns raw when client option raw: true', async () => {
+      const mockResponse = {
+        api: { name: 'api.auto.dev' },
+        make: 'Kia',
+      }
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+        new Response(JSON.stringify(mockResponse), {
+          status: 200,
+          headers: { 'content-type': 'application/json', 'x-request-id': 'req_raw' },
+        }),
+      )
+      const client = new AutoDevClient({ apiKey: 'test-key', raw: true })
+      const result = await client.request('decode', { vin: '1HGCM82633A004352' })
+      expect(result.data).toEqual({ api: { name: 'api.auto.dev' }, make: 'Kia' })
+      fetchSpy.mockRestore()
+    })
+
+    it('per-request raw overrides client option', async () => {
+      const mockResponse = {
+        api: { name: 'api.auto.dev' },
+        make: 'Kia',
+      }
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+        new Response(JSON.stringify(mockResponse), {
+          status: 200,
+          headers: { 'content-type': 'application/json', 'x-request-id': 'req_override' },
+        }),
+      )
+      const client = new AutoDevClient({ apiKey: 'test-key', raw: false })
+      const result = await client.request('decode', { vin: '1HGCM82633A004352', raw: true })
+      expect(result.data).toEqual({ api: { name: 'api.auto.dev' }, make: 'Kia' })
+      fetchSpy.mockRestore()
+    })
+  })
 })

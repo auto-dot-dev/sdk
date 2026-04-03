@@ -11,6 +11,7 @@ export interface AutoDevClientOptions {
   apiKey: string
   org?: string
   baseUrl?: string
+  raw?: boolean
 }
 
 // Re-export generated param types under SDK-friendly names
