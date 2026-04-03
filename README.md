@@ -55,10 +55,10 @@ All commands support `--json`, `--yaml`, and `--api-key <key>` flags. Use `npx @
 ## MCP Server
 
 ```bash
-auto mcp install
+npx @auto.dev/sdk mcp install
 ```
 
-Auto-configures Claude Code, Claude Desktop, and Cursor. No API key needed — uses your login.
+This installs the package globally (so MCP clients can find the `auto` binary) and auto-configures Claude Code, Claude Desktop, and Cursor. No API key needed — uses your login.
 
 ### Available MCP Tools
 
