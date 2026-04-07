@@ -10,11 +10,15 @@ import { startMcpServer } from '../mcp/server'
 import { getValidToken } from '../auth/oauth'
 import { listDocs, getDoc, searchDocs, getAliases } from '../docs/search.js'
 import { brand, label, hint, value, formatError } from './colors'
+import { createRequire } from 'module'
+
+const require = createRequire(import.meta.url)
+const { version } = require('../../package.json')
 
 const program = new Command()
   .name('auto')
   .description('CLI for the auto.dev automotive APIs')
-  .version('0.1.0')
+  .version(version)
   .option('--mcp', 'Start as MCP stdio server')
 
 // Handle --mcp before commander parses subcommands
