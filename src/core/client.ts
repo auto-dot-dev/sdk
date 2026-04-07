@@ -23,11 +23,13 @@ export class AutoDevClient {
   private readonly org?: string
   private readonly raw?: boolean
 
-  constructor(options: AutoDevClientOptions) {
-    this.apiKey = options.apiKey
-    this.org = options.org
-    this.baseUrl = options.baseUrl ?? 'https://api.auto.dev'
-    this.raw = options.raw
+  constructor(options?: AutoDevClientOptions) {
+    const apiKey = options?.apiKey ?? process.env.AUTODEV_API_KEY
+    if (!apiKey) throw new AutoDevError(401, 'UNAUTHORIZED', 'No API key provided. Pass apiKey in options or set AUTODEV_API_KEY env variable.')
+    this.apiKey = apiKey
+    this.org = options?.org
+    this.baseUrl = options?.baseUrl ?? 'https://api.auto.dev'
+    this.raw = options?.raw
   }
 
   async request<T = unknown>(endpoint: string, params?: RequestParams): Promise<AutoDevResponse<T>> {

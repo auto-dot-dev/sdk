@@ -8,7 +8,7 @@ export interface AutoDevResponse<T> {
 }
 
 export interface AutoDevClientOptions {
-  apiKey: string
+  apiKey?: string
   org?: string
   baseUrl?: string
   raw?: boolean
