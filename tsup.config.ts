@@ -7,6 +7,7 @@ export default defineConfig({
     'core/client': 'src/core/client.ts',
     'mcp/server': 'src/mcp/server.ts',
     'cli/index': 'src/cli/index.ts',
+    'docs/search-portable': 'src/docs/search-portable.ts',
   },
   format: ['esm'],
   dts: true,

@@ -20,6 +20,10 @@
     "./core": {
       "import": "./dist/core/client.js",
       "types": "./dist/core/client.d.ts"
+    },
+    "./docs": {
+      "import": "./dist/docs/search-portable.js",
+      "types": "./dist/docs/search-portable.d.ts"
     }
   },
   "scripts": {
@@ -28,11 +32,12 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "build:docs": "tsx scripts/build-docs.ts",
+    "build:docs-data": "tsx scripts/build-docs-data.ts",
     "generate": "tsx scripts/generate.ts",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prepublishOnly": "pnpm build && pnpm build:docs"
+    "prepublishOnly": "pnpm build:docs && pnpm build:docs-data && pnpm build"
   },
   "keywords": [
     "auto.dev",
