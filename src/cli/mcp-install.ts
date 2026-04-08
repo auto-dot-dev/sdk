@@ -37,6 +37,30 @@ const MCP_CLIENTS: McpClient[] = [
     key: 'mcpServers',
     serverConfig: { ...BASE_SERVER_CONFIG },
   },
+  {
+    name: 'Windsurf',
+    configPath: join(homedir(), '.codeium', 'windsurf', 'mcp_config.json'),
+    key: 'mcpServers',
+    serverConfig: { ...BASE_SERVER_CONFIG },
+  },
+  {
+    name: 'VS Code Copilot',
+    configPath: join(homedir(), 'Library', 'Application Support', 'Code', 'User', 'mcp.json'),
+    key: 'servers',
+    serverConfig: { type: 'stdio', ...BASE_SERVER_CONFIG },
+  },
+  {
+    name: 'Cline',
+    configPath: join(homedir(), 'Library', 'Application Support', 'Code', 'User', 'globalStorage', 'saoudrizwan.claude-dev', 'settings', 'cline_mcp_settings.json'),
+    key: 'mcpServers',
+    serverConfig: { ...BASE_SERVER_CONFIG },
+  },
+  {
+    name: 'Zed',
+    configPath: join(homedir(), '.config', 'zed', 'settings.json'),
+    key: 'context_servers',
+    serverConfig: { ...BASE_SERVER_CONFIG, env: {} },
+  },
 ]
 
 function detectClients(): McpClient[] {
@@ -124,7 +148,7 @@ export function buildMcpCommand(): Command {
       const clients = detectClients()
       if (clients.length === 0) {
         console.log(formatError('No supported MCP clients detected'))
-        console.log(hint('Supported: Claude Code, Claude Desktop, Cursor'))
+        console.log(hint('Supported: Claude Code, Claude Desktop, Cursor, Windsurf, VS Code Copilot, Cline, Zed'))
         console.log(hint('\nManual config (add to your MCP settings):'))
         console.log(JSON.stringify({ 'auto-dev': { type: 'stdio', ...BASE_SERVER_CONFIG } }, null, 2))
         return
