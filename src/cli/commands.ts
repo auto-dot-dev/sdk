@@ -107,6 +107,8 @@ function formatOutput(data: unknown, format: string): string {
   // table / default
   if (Array.isArray(data)) {
     if (data.length === 0) return '(no results)'
+    const hasNested = Object.values(data[0] as object).some((v) => typeof v === 'object' && v !== null)
+    if (hasNested) return colorizeJson(JSON.stringify(data, null, 2))
     const keys = Object.keys(data[0] as object)
     const rows = (data as Record<string, unknown>[]).map((row) =>
       keys.map((k) => String(row[k] ?? '')).join('\t'),
