@@ -54,7 +54,7 @@ export function createSpinner(label?: string): Spinner {
     process.stdout.write(`\r\x1B[K\x1B[?25h`)
   }
 
-  process.on('exit', cleanup)
+  process.once('exit', cleanup)
 
   return {
     stop(finalMessage?: string) {
