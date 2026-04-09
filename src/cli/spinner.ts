@@ -28,7 +28,7 @@ interface Spinner {
 const noopSpinner: Spinner = { stop() {} }
 
 export function createSpinner(label?: string): Spinner {
-  if (!process.stdout.isTTY || process.env.NO_COLOR !== undefined) {
+  if (!process.stderr.isTTY || process.env.NO_COLOR !== undefined) {
     return noopSpinner
   }
 
@@ -36,13 +36,14 @@ export function createSpinner(label?: string): Spinner {
   let frameIndex = 0
   let stopped = false
 
-  // Hide cursor
-  process.stdout.write('\x1B[?25l' + `\r\x1B[K${brand(FRAMES[frameIndex % FRAMES.length])} ${message}`)
+  // Hide cursor — use stderr to match CLI status output convention
+  // (stdout is reserved for data/JSON output)
+  process.stderr.write('\x1B[?25l' + `\r\x1B[K${brand(FRAMES[frameIndex % FRAMES.length])} ${message}`)
   frameIndex++
 
   const interval = setInterval(() => {
     const frame = brand(FRAMES[frameIndex % FRAMES.length])
-    process.stdout.write(`\r\x1B[K${frame} ${message}`)
+    process.stderr.write(`\r\x1B[K${frame} ${message}`)
     frameIndex++
   }, FRAME_INTERVAL)
 
@@ -51,7 +52,7 @@ export function createSpinner(label?: string): Spinner {
     stopped = true
     clearInterval(interval)
     // Clear line and show cursor
-    process.stdout.write(`\r\x1B[K\x1B[?25h`)
+    process.stderr.write(`\r\x1B[K\x1B[?25h`)
   }
 
   process.once('exit', cleanup)
@@ -61,7 +62,7 @@ export function createSpinner(label?: string): Spinner {
       cleanup()
       process.removeListener('exit', cleanup)
       if (finalMessage) {
-        process.stdout.write(finalMessage + '\n')
+        process.stderr.write(finalMessage + '\n')
       }
     },
   }

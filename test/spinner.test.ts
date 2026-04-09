@@ -7,14 +7,14 @@ describe('spinner', () => {
   let writeStub: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
-    originalIsTTY = process.stdout.isTTY
+    originalIsTTY = process.stderr.isTTY
     originalNoColor = process.env.NO_COLOR
     writeStub = vi.fn()
-    vi.spyOn(process.stdout, 'write').mockImplementation(writeStub)
+    vi.spyOn(process.stderr, 'write').mockImplementation(writeStub)
   })
 
   afterEach(() => {
-    process.stdout.isTTY = originalIsTTY
+    process.stderr.isTTY = originalIsTTY
     if (originalNoColor === undefined) {
       delete process.env.NO_COLOR
     } else {
@@ -23,8 +23,8 @@ describe('spinner', () => {
     vi.restoreAllMocks()
   })
 
-  it('renders spinner frames to stdout on TTY', async () => {
-    process.stdout.isTTY = true
+  it('renders spinner frames to stderr on TTY', async () => {
+    process.stderr.isTTY = true
     delete process.env.NO_COLOR
 
     const spinner = createSpinner('Loading...')
@@ -39,8 +39,8 @@ describe('spinner', () => {
     expect(firstCall).toContain('Loading...')
   })
 
-  it('returns no-op when stdout is not a TTY', () => {
-    process.stdout.isTTY = false
+  it('returns no-op when stderr is not a TTY', () => {
+    process.stderr.isTTY = false
     delete process.env.NO_COLOR
 
     const spinner = createSpinner('Loading...')
@@ -51,7 +51,7 @@ describe('spinner', () => {
   })
 
   it('returns no-op when NO_COLOR is set', () => {
-    process.stdout.isTTY = true
+    process.stderr.isTTY = true
     process.env.NO_COLOR = '1'
 
     const spinner = createSpinner('Loading...')
@@ -61,7 +61,7 @@ describe('spinner', () => {
   })
 
   it('picks a random message when no label provided', async () => {
-    process.stdout.isTTY = true
+    process.stderr.isTTY = true
     delete process.env.NO_COLOR
 
     const spinner = createSpinner()
@@ -76,7 +76,7 @@ describe('spinner', () => {
   })
 
   it('stop clears the line and shows cursor', async () => {
-    process.stdout.isTTY = true
+    process.stderr.isTTY = true
     delete process.env.NO_COLOR
 
     const spinner = createSpinner('Test')
