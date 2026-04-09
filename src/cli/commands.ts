@@ -3,6 +3,7 @@ import { getValidToken } from '../auth/oauth'
 import { formatError, formatSuccess, brand, value, hint, label, limeGreen, brown, yellowNum, purple, red } from './colors'
 import { stripMetadata, resolveRaw } from '../core/strip'
 import { loadConfig } from '../core/config'
+import { createSpinner } from './spinner'
 
 const BASE_URL = process.env.AUTODEV_BASE_URL ?? 'https://api.auto.dev'
 
@@ -20,20 +21,29 @@ async function getApiKey(options: Record<string, string>): Promise<string> {
   return apiKey as string
 }
 
-async function apiGet(path: string, apiKey: string, options?: { raw?: boolean }): Promise<unknown> {
+async function apiGet(path: string, apiKey: string, options?: { raw?: boolean; suppressSpinner?: boolean }): Promise<unknown> {
   const url = `${BASE_URL}${path}`
   if (process.env.DEBUG) {
     console.error(`[DEBUG] GET ${url}`)
     console.error(`[DEBUG] Token: ${apiKey.substring(0, 10)}...${apiKey.substring(apiKey.length - 5)}`)
   }
+  const spinner = options?.suppressSpinner ? { stop() {} } : createSpinner()
   const start = Date.now()
-  const response = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      Accept: 'application/json',
-    },
-  })
+  let response: Response
+  try {
+    response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        Accept: 'application/json',
+      },
+    })
+  } catch (err) {
+    spinner.stop()
+    throw err
+  }
   const elapsed = ((Date.now() - start) / 1000).toFixed(2)
+
+  spinner.stop()
   if (!response.ok) {
     const body = await response.json().catch(() => ({ error: response.statusText }))
 
@@ -142,6 +152,10 @@ function getFormat(options: Record<string, unknown>): string {
   return 'table'
 }
 
+export function shouldSuppressSpinner(options: Record<string, unknown>): boolean {
+  return !!(options.json || options.yaml || options.raw)
+}
+
 export function buildApiCommands(): Command[] {
   const commands: Command[] = []
 
@@ -152,7 +166,7 @@ export function buildApiCommands(): Command[] {
       .argument('<vin>', 'Vehicle Identification Number'),
   ).action(async (vin, options) => {
     const apiKey = await getApiKey(options)
-    const data = await apiGet(`/vin/${vin}`, apiKey, { raw: options.raw })
+    const data = await apiGet(`/vin/${vin}`, apiKey, { raw: options.raw, suppressSpinner: shouldSuppressSpinner(options) })
     console.log(formatOutput(data, getFormat(options)))
   })
   commands.push(decode)
@@ -164,7 +178,7 @@ export function buildApiCommands(): Command[] {
       .argument('<vin>', 'Vehicle Identification Number'),
   ).action(async (vin, options) => {
     const apiKey = await getApiKey(options)
-    const data = await apiGet(`/photos/${vin}`, apiKey, { raw: options.raw })
+    const data = await apiGet(`/photos/${vin}`, apiKey, { raw: options.raw, suppressSpinner: shouldSuppressSpinner(options) })
     console.log(formatOutput(data, getFormat(options)))
   })
   commands.push(photos)
@@ -200,7 +214,7 @@ export function buildApiCommands(): Command[] {
       if (options.page) params.set('page', options.page)
       if (options.limit) params.set('limit', options.limit)
       const query = params.toString() ? `?${params.toString()}` : ''
-      const data = await apiGet(`/listings${query}`, apiKey, { raw: options.raw })
+      const data = await apiGet(`/listings${query}`, apiKey, { raw: options.raw, suppressSpinner: shouldSuppressSpinner(options) })
       console.log(formatOutput(data, getFormat(options)))
     })
   commands.push(listings)
@@ -212,7 +226,7 @@ export function buildApiCommands(): Command[] {
       .argument('<vin>', 'Vehicle Identification Number'),
   ).action(async (vin, options) => {
     const apiKey = await getApiKey(options)
-    const data = await apiGet(`/specs/${vin}`, apiKey, { raw: options.raw })
+    const data = await apiGet(`/specs/${vin}`, apiKey, { raw: options.raw, suppressSpinner: shouldSuppressSpinner(options) })
     console.log(formatOutput(data, getFormat(options)))
   })
   commands.push(specs)
@@ -224,7 +238,7 @@ export function buildApiCommands(): Command[] {
       .argument('<vin>', 'Vehicle Identification Number'),
   ).action(async (vin, options) => {
     const apiKey = await getApiKey(options)
-    const data = await apiGet(`/build/${vin}`, apiKey, { raw: options.raw })
+    const data = await apiGet(`/build/${vin}`, apiKey, { raw: options.raw, suppressSpinner: shouldSuppressSpinner(options) })
     console.log(formatOutput(data, getFormat(options)))
   })
   commands.push(build)
@@ -236,7 +250,7 @@ export function buildApiCommands(): Command[] {
       .argument('<vin>', 'Vehicle Identification Number'),
   ).action(async (vin, options) => {
     const apiKey = await getApiKey(options)
-    const data = await apiGet(`/recalls/${vin}`, apiKey, { raw: options.raw })
+    const data = await apiGet(`/recalls/${vin}`, apiKey, { raw: options.raw, suppressSpinner: shouldSuppressSpinner(options) })
     console.log(formatOutput(data, getFormat(options)))
   })
   commands.push(recalls)
@@ -263,7 +277,7 @@ export function buildApiCommands(): Command[] {
       if (options.docFee) params.set('docFee', options.docFee)
       if (options.tradeIn) params.set('tradeIn', options.tradeIn)
       const query = params.toString() ? `?${params.toString()}` : ''
-      const data = await apiGet(`/payments/${vin}${query}`, apiKey, { raw: options.raw })
+      const data = await apiGet(`/payments/${vin}${query}`, apiKey, { raw: options.raw, suppressSpinner: shouldSuppressSpinner(options) })
       console.log(formatOutput(data, getFormat(options)))
     })
   commands.push(payments)
@@ -292,7 +306,7 @@ export function buildApiCommands(): Command[] {
       if (options.vehicleAge) params.set('vehicleAge', options.vehicleAge)
       if (options.vehicleMileage) params.set('vehicleMileage', options.vehicleMileage)
       const query = params.toString() ? `?${params.toString()}` : ''
-      const data = await apiGet(`/apr/${vin}${query}`, apiKey, { raw: options.raw })
+      const data = await apiGet(`/apr/${vin}${query}`, apiKey, { raw: options.raw, suppressSpinner: shouldSuppressSpinner(options) })
       console.log(formatOutput(data, getFormat(options)))
     })
   commands.push(apr)
@@ -311,7 +325,7 @@ export function buildApiCommands(): Command[] {
       if (options.zip) params.set('zip', options.zip)
       if (options.fromZip) params.set('fromZip', options.fromZip)
       const query = params.toString() ? `?${params.toString()}` : ''
-      const data = await apiGet(`/tco/${vin}${query}`, apiKey, { raw: options.raw })
+      const data = await apiGet(`/tco/${vin}${query}`, apiKey, { raw: options.raw, suppressSpinner: shouldSuppressSpinner(options) })
       console.log(formatOutput(data, getFormat(options)))
     })
   commands.push(tco)
@@ -323,7 +337,7 @@ export function buildApiCommands(): Command[] {
       .argument('<vin>', 'Vehicle Identification Number'),
   ).action(async (vin, options) => {
     const apiKey = await getApiKey(options)
-    const data = await apiGet(`/openrecalls/${vin}`, apiKey, { raw: options.raw })
+    const data = await apiGet(`/openrecalls/${vin}`, apiKey, { raw: options.raw, suppressSpinner: shouldSuppressSpinner(options) })
     console.log(formatOutput(data, getFormat(options)))
   })
   commands.push(openRecalls)
@@ -336,7 +350,7 @@ export function buildApiCommands(): Command[] {
       .argument('<plate>', 'License plate number'),
   ).action(async (state, plate, options) => {
     const apiKey = await getApiKey(options)
-    const data = await apiGet(`/plate/${state}/${plate}`, apiKey, { raw: options.raw })
+    const data = await apiGet(`/plate/${state}/${plate}`, apiKey, { raw: options.raw, suppressSpinner: shouldSuppressSpinner(options) })
     console.log(formatOutput(data, getFormat(options)))
   })
   commands.push(plate)
@@ -365,7 +379,7 @@ export function buildApiCommands(): Command[] {
       if (options.downPayment) params.set('downPayment', options.downPayment)
       if (options.months) params.set('months', options.months)
       const query = params.toString() ? `?${params.toString()}` : ''
-      const data = await apiGet(`/taxes/${vin}${query}`, apiKey, { raw: options.raw })
+      const data = await apiGet(`/taxes/${vin}${query}`, apiKey, { raw: options.raw, suppressSpinner: shouldSuppressSpinner(options) })
       console.log(formatOutput(data, getFormat(options)))
     })
   commands.push(taxes)
@@ -376,7 +390,7 @@ export function buildApiCommands(): Command[] {
       .description('Get account usage statistics'),
   ).action(async (options) => {
     const apiKey = await getApiKey(options)
-    const data = await apiGet('/usage', apiKey, { raw: options.raw })
+    const data = await apiGet('/usage', apiKey, { raw: options.raw, suppressSpinner: shouldSuppressSpinner(options) })
     console.log(formatOutput(data, getFormat(options)))
   })
   commands.push(usage)
