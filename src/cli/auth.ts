@@ -4,6 +4,7 @@ import { Command } from 'commander'
 import { authorizeDevice, pollForTokens, saveTokenData, saveApiKey, clearCredentials, getValidToken } from '../auth/oauth'
 import { DEFAULT_AUTH_CONFIG } from '../auth/config'
 import { brand, value, hint, header, kv, formatSuccess, formatError } from './colors'
+import { createSpinner } from './spinner'
 
 function openBrowser(url: string): void {
   const cmd = platform() === 'darwin' ? 'open' : platform() === 'win32' ? 'start' : 'xdg-open'
@@ -22,7 +23,10 @@ export function buildLoginCommand(): Command {
       }
 
       try {
+        const deviceSpinner = createSpinner()
         const deviceCode = await authorizeDevice(DEFAULT_AUTH_CONFIG.clientId)
+        deviceSpinner.stop()
+
         const verifyUrl = deviceCode.verification_uri_complete || `${deviceCode.verification_uri}?user_code=${deviceCode.user_code}`
         console.log(`\n${brand('auto.dev')} ${hint('authentication')}`)
         console.log(`\nOpening browser to: ${value(verifyUrl)}`)
@@ -65,7 +69,9 @@ export function buildWhoamiCommand(): Command {
         return
       }
       const { getUser } = await import('../auth/oauth')
+      const whoamiSpinner = createSpinner()
       const { user } = await getUser(token)
+      whoamiSpinner.stop()
       if (user) {
         console.log(`\n${header('auto.dev')}`)
         console.log()
