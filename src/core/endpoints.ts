@@ -1,13 +1,33 @@
+export const ENDPOINT_NAMES = [
+  'decode',
+  'photos',
+  'listings',
+  'specs',
+  'build',
+  'recalls',
+  'payments',
+  'apr',
+  'tco',
+  'openRecalls',
+  'plate',
+  'taxes',
+  'usage',
+] as const
+
+export type EndpointName = (typeof ENDPOINT_NAMES)[number]
+
+export type Tier = 'starter' | 'growth' | 'scale' | 'auth'
+
 export interface EndpointDefinition {
   name: string
   method: 'GET' | 'POST'
   path: string
-  tier: 'starter' | 'growth' | 'scale' | 'auth'
+  tier: Tier
   description: string
   vinRequired: boolean
 }
 
-export const ENDPOINTS = {
+export const ENDPOINTS: Record<EndpointName, EndpointDefinition> = {
   decode: {
     name: 'decode',
     method: 'GET',
@@ -112,4 +132,4 @@ export const ENDPOINTS = {
     description: 'Get account usage statistics',
     vinRequired: false,
   },
-} satisfies Record<string, EndpointDefinition>
+}

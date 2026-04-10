@@ -1,5 +1,6 @@
 import { Command } from 'commander'
-import { ENDPOINTS, type EndpointDefinition } from '../core/endpoints'
+import { ENDPOINTS } from '../core/endpoints'
+import { objectEntries, objectKeys, objectValues } from '../core/utils'
 import { accent, brand, dim, formatError, hint, label, tierBadge, value } from './colors'
 
 export interface ExploreEntry {
@@ -97,7 +98,7 @@ const PARAM_DETAILS: Record<string, ParameterDetail[]> = {
 }
 
 export function getExploreOutput(planFilter?: string): ExploreEntry[] {
-  const entries = Object.values(ENDPOINTS).map((ep: EndpointDefinition) => ({
+  const entries = objectValues(ENDPOINTS).map((ep) => ({
     name: ep.name,
     tier: ep.tier,
     description: ep.description,
@@ -113,11 +114,11 @@ export function getExploreOutput(planFilter?: string): ExploreEntry[] {
 
 export function getEndpointDetail(name: string): EndpointDetail | null {
   // Find endpoint by name (camelCase key or matching name field)
-  const ep = Object.values(ENDPOINTS).find((e) => e.name === name)
+  const ep = objectValues(ENDPOINTS).find((e) => e.name === name)
   if (!ep) return null
 
   // Find the key in PARAM_DETAILS — try direct name match, then camelCase conversion
-  const key = Object.keys(ENDPOINTS).find((k) => (ENDPOINTS as Record<string, { name: string }>)[k]!.name === name) ?? name
+  const key = objectKeys(ENDPOINTS).find((k) => ENDPOINTS[k].name === name) ?? name
   const parameters = PARAM_DETAILS[key] ?? []
 
   return {
@@ -174,7 +175,7 @@ export function buildExploreCommand(): Command {
         tiers[e.tier]!.push(e)
       }
 
-      for (const [tier, eps] of Object.entries(tiers)) {
+      for (const [tier, eps] of objectEntries(tiers)) {
         console.log(`\n${tierBadge(tier)}`)
         for (const ep of eps) {
           console.log(`  ${label(ep.name.padEnd(16))} ${value(ep.path.padEnd(28))} ${dim(ep.description)}`)
