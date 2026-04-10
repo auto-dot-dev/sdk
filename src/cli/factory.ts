@@ -158,7 +158,7 @@ export function formatOutput(data: unknown, format: string): string {
       Math.max(k.length, ...allRows.map((r) => r[i]!.length)),
     )
     const pad = (s: string, w: number) => s + ' '.repeat(Math.max(0, w - s.length))
-    const header = keys.map((k, i) => pad(k, colWidths[i]!)).join('  ')
+    const header = keys.map((k, i) => label(pad(k, colWidths[i]!))).join('  ')
     const body = allRows.map((row) =>
       row.map((val, i) => pad(val, colWidths[i]!)).join('  '),
     )
