@@ -1,6 +1,6 @@
 import { Command } from 'commander'
 import { loadConfig, saveConfig } from '../core/config'
-import { brand, hint, label, value, formatSuccess } from './colors'
+import { brand, formatSuccess, hint, label, value } from './colors'
 
 export function buildConfigCommand(): Command {
   const config = new Command('config')

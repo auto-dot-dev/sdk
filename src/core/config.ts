@@ -1,6 +1,6 @@
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
-import { dirname, join } from 'node:path'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
+import { dirname, join } from 'node:path'
 
 export interface Config {
   raw?: boolean
@@ -21,5 +21,5 @@ export function saveConfig(updates: Partial<Config>, configPath: string = DEFAUL
   mkdirSync(dirname(configPath), { recursive: true })
   const existing = loadConfig(configPath)
   const merged = { ...existing, ...updates }
-  writeFileSync(configPath, JSON.stringify(merged, null, 2) + '\n')
+  writeFileSync(configPath, `${JSON.stringify(merged, null, 2)}\n`)
 }

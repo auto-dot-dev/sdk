@@ -1,10 +1,10 @@
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs'
-import { join } from 'node:path'
-import { homedir } from 'node:os'
 import { execSync } from 'node:child_process'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { homedir } from 'node:os'
+import { join } from 'node:path'
 import { Command } from 'commander'
 import { getValidToken } from '../auth/oauth'
-import { brand, label, value, hint, formatSuccess, formatError } from './colors'
+import { brand, formatError, formatSuccess, hint, label, value } from './colors'
 
 interface McpClient {
   name: string

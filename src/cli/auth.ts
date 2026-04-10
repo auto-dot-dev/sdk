@@ -1,9 +1,9 @@
 import { exec } from 'node:child_process'
 import { platform } from 'node:os'
 import { Command } from 'commander'
-import { authorizeDevice, pollForTokens, saveTokenData, saveApiKey, clearCredentials, getValidToken } from '../auth/oauth'
 import { DEFAULT_AUTH_CONFIG } from '../auth/config'
-import { brand, value, hint, header, kv, formatSuccess, formatError } from './colors'
+import { authorizeDevice, clearCredentials, getValidToken, pollForTokens, saveApiKey, saveTokenData } from '../auth/oauth'
+import { brand, formatError, formatSuccess, header, hint, kv, value } from './colors'
 import { createSpinner } from './spinner'
 
 function openBrowser(url: string): void {

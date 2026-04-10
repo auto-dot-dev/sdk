@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { AutoDevClient } from '../core/client.js'
 import { loadConfig, saveConfig } from '../core/config.js'
 import { getDoc, listDocs, searchDocs } from '../docs/search.js'
-import { type McpToolDef, type ToolDefinition, registerApiTools, toToolDefinitions } from './factory.js'
+import { type McpToolDef, registerApiTools, type ToolDefinition, toToolDefinitions } from './factory.js'
 
 // ── API Tool Declarations ─────────────────────────────────────────────
 
