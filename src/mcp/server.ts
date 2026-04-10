@@ -2,10 +2,10 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod'
 import { AutoDevClient } from '../core/client.js'
-import { AutoDevError } from '../errors.js'
-import { ENDPOINTS } from '../core/endpoints.js'
-import { searchDocs, getDoc, listDocs } from '../docs/search.js'
 import { loadConfig, saveConfig } from '../core/config.js'
+import { ENDPOINTS } from '../core/endpoints.js'
+import { getDoc, listDocs, searchDocs } from '../docs/search.js'
+import { AutoDevError } from '../errors.js'
 
 export interface ToolDefinition {
   name: string
@@ -220,7 +220,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
 ]
 
 export interface McpServerOptions {
-  apiKey: string
+  apiKey: string | (() => Promise<string>)
   baseUrl?: string
 }
 

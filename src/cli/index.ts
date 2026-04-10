@@ -1,16 +1,17 @@
 #!/usr/bin/env node
 
+import { createRequire } from 'node:module'
 import { Command } from 'commander'
+import { resolveAuth } from '../auth/resolve'
+import { getValidToken } from '../auth/oauth'
+import { getAliases, getDoc, listDocs, searchDocs } from '../docs/search.js'
+import { startMcpServer } from '../mcp/server'
 import { buildLoginCommand, buildLogoutCommand, buildWhoamiCommand } from './auth'
+import { brand, formatError, hint, label, value } from './colors'
 import { buildApiCommands } from './commands'
+import { buildConfigCommand } from './config'
 import { buildExploreCommand } from './explore'
 import { buildMcpCommand } from './mcp-install'
-import { buildConfigCommand } from './config'
-import { startMcpServer } from '../mcp/server'
-import { getValidToken } from '../auth/oauth'
-import { listDocs, getDoc, searchDocs, getAliases } from '../docs/search.js'
-import { brand, label, hint, value, formatError } from './colors'
-import { createRequire } from 'module'
 
 const require = createRequire(import.meta.url)
 const { version } = require('../../package.json')
@@ -24,12 +25,9 @@ const program = new Command()
 // Handle --mcp before commander parses subcommands
 if (process.argv.includes('--mcp')) {
   ;(async () => {
-    const apiKey = process.env.AUTODEV_API_KEY ?? await getValidToken()
-    if (!apiKey) {
-      process.stderr.write('No API key found. Set AUTODEV_API_KEY or run: auto login\n')
-      process.exit(1)
-    }
-    await startMcpServer({ apiKey })
+    await startMcpServer({
+      apiKey: () => resolveAuth(),
+    })
   })()
 } else {
 
