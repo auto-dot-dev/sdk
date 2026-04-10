@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { z } from 'zod'
-import { handleError, registerApiTool, registerApiTools, type McpToolDef } from '../../src/mcp/factory'
+import { handleError, registerApiTool, registerApiTools, toToolDefinitions, type McpToolDef } from '../../src/mcp/factory'
 import { AutoDevError } from '../../src/errors'
 
 // Minimal mock for McpServer
@@ -124,5 +124,46 @@ describe('registerApiTools', () => {
     expect(server.tools).toHaveLength(2)
     expect(server.tools[0].name).toBe('auto_decode')
     expect(server.tools[1].name).toBe('auto_photos')
+  })
+})
+
+describe('toToolDefinitions', () => {
+  it('converts simple VIN tool to JSON Schema ToolDefinition', () => {
+    const defs: McpToolDef[] = [
+      { endpoint: 'decode', params: { vin: z.string().describe('Vehicle Identification Number') } },
+    ]
+    const result = toToolDefinitions(defs)
+
+    expect(result).toHaveLength(1)
+    expect(result[0].name).toBe('auto_decode')
+    expect(result[0].description).toBe('Decode a VIN — returns make, model, year, trim, engine, drivetrain')
+    expect(result[0].inputSchema.type).toBe('object')
+    expect(result[0].inputSchema.properties.vin).toEqual({ type: 'string', description: 'Vehicle Identification Number' })
+    expect(result[0].inputSchema.required).toContain('vin')
+  })
+
+  it('marks optional params as not required', () => {
+    const defs: McpToolDef[] = [
+      { endpoint: 'tco', params: {
+        vin: z.string().describe('VIN'),
+        zip: z.string().optional().describe('ZIP code'),
+      }},
+    ]
+    const result = toToolDefinitions(defs)
+
+    expect(result[0].inputSchema.required).toContain('vin')
+    expect(result[0].inputSchema.required).not.toContain('zip')
+    expect(result[0].inputSchema.properties.zip).toEqual({ type: 'string', description: 'ZIP code' })
+  })
+
+  it('handles tool with no required params', () => {
+    const defs: McpToolDef[] = [
+      { endpoint: 'listings', params: {
+        make: z.string().optional().describe('Make'),
+      }},
+    ]
+    const result = toToolDefinitions(defs)
+
+    expect(result[0].inputSchema.required).toEqual([])
   })
 })

@@ -4,6 +4,8 @@ import { AutoDevError } from '../errors'
 import { ENDPOINTS } from '../core/endpoints'
 import type { AutoDevClient } from '../core/client'
 
+type EndpointDefinition = { description: string; path: string }
+
 export interface McpToolDef {
   endpoint: string
   params: Record<string, z.ZodType>
@@ -52,6 +54,43 @@ export function registerApiTools(server: McpServer, client: AutoDevClient, defs:
   for (const def of defs) {
     registerApiTool(server, client, def)
   }
+}
+
+export interface ToolDefinition {
+  name: string
+  description: string
+  inputSchema: {
+    type: 'object'
+    properties: Record<string, { type: string; description: string }>
+    required: string[]
+  }
+}
+
+export function toToolDefinitions(defs: McpToolDef[]): ToolDefinition[] {
+  return defs.map((def) => {
+    const definition = (ENDPOINTS as Record<string, EndpointDefinition | undefined>)[def.endpoint]
+    if (!definition) {
+      throw new Error(`Unknown endpoint: ${def.endpoint}`)
+    }
+
+    const properties: Record<string, { type: string; description: string }> = {}
+    const required: string[] = []
+
+    for (const [key, schema] of Object.entries(def.params)) {
+      const isOptional = schema.isOptional()
+      const description = schema.description ?? key
+      properties[key] = { type: 'string', description }
+      if (!isOptional) {
+        required.push(key)
+      }
+    }
+
+    return {
+      name: `auto_${def.endpoint}`,
+      description: definition.description,
+      inputSchema: { type: 'object' as const, properties, required },
+    }
+  })
 }
 
 export function handleError(err: unknown, endpoint?: string): McpErrorResult {
