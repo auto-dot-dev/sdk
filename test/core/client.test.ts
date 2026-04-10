@@ -12,6 +12,30 @@ describe('AutoDevClient', () => {
     expect(client).toBeDefined()
   })
 
+  it('accepts an async function as apiKey without throwing', () => {
+    const resolver = async () => 'ad_sk_resolved_token'
+    expect(() => new AutoDevClient({ apiKey: resolver })).not.toThrow()
+  })
+
+  it('resolves auth via async function when making requests', async () => {
+    const resolver = vi.fn().mockResolvedValue('ad_sk_resolved_token')
+    const asyncClient = new AutoDevClient({ apiKey: resolver })
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify({ make: 'Toyota' }), {
+        status: 200,
+        headers: { 'content-type': 'application/json', 'x-request-id': 'req_async' },
+      }),
+    )
+
+    await asyncClient.request('decode', { vin: '1HGCM82633A004352' })
+
+    expect(resolver).toHaveBeenCalledOnce()
+    const [, init] = fetchSpy.mock.calls[0]
+    expect((init?.headers as Record<string, string>)['Authorization']).toBe('Bearer ad_sk_resolved_token')
+
+    fetchSpy.mockRestore()
+  })
+
   it('makes GET request with auth header and VIN path param', async () => {
     const mockResponse = { year: 2023, make: 'Honda', model: 'Accord' }
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(

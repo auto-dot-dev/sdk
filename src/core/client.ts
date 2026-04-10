@@ -1,8 +1,8 @@
 import { createAuthHeaders } from '../auth/api-key'
 import { AutoDevError, type AutoDevErrorCode } from '../errors'
-import { ENDPOINTS, type EndpointDefinition } from './endpoints'
-import { stripMetadata, resolveRaw } from './strip'
 import { loadConfig } from './config'
+import { ENDPOINTS, type EndpointDefinition } from './endpoints'
+import { resolveRaw, stripMetadata } from './strip'
 import type { AutoDevClientOptions, AutoDevResponse } from './types'
 
 export { ENDPOINTS } from './endpoints'
@@ -19,17 +19,24 @@ interface RequestParams {
 
 export class AutoDevClient {
   private readonly baseUrl: string
-  private readonly apiKey: string
+  private readonly apiKeyOrResolver: string | (() => Promise<string>)
   private readonly org?: string
   private readonly raw?: boolean
 
   constructor(options?: AutoDevClientOptions) {
     const apiKey = options?.apiKey ?? process.env.AUTODEV_API_KEY
     if (!apiKey) throw new AutoDevError(401, 'UNAUTHORIZED', 'No API key provided. Pass apiKey in options or set AUTODEV_API_KEY env variable.')
-    this.apiKey = apiKey
+    this.apiKeyOrResolver = apiKey
     this.org = options?.org
     this.baseUrl = options?.baseUrl ?? 'https://api.auto.dev'
     this.raw = options?.raw
+  }
+
+  private async resolveApiKey(): Promise<string> {
+    if (typeof this.apiKeyOrResolver === 'function') {
+      return this.apiKeyOrResolver()
+    }
+    return this.apiKeyOrResolver
   }
 
   async request<T = unknown>(endpoint: string, params?: RequestParams): Promise<AutoDevResponse<T>> {
@@ -39,8 +46,9 @@ export class AutoDevClient {
     }
 
     const url = this.buildUrl(definition.path, params)
+    const apiKey = await this.resolveApiKey()
     const headers = {
-      ...createAuthHeaders({ apiKey: this.apiKey, org: this.org }),
+      ...createAuthHeaders({ apiKey, org: this.org }),
       Accept: 'application/json',
     }
 
