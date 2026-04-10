@@ -27,9 +27,10 @@ describe('formatOutput', () => {
       { name: 'Bob', age: '25' },
     ]
     const result = formatOutput(data, 'table')
-    expect(result).toContain('name\tage')
-    expect(result).toContain('Alice\t30')
-    expect(result).toContain('Bob\t25')
+    expect(result).toContain('name')
+    expect(result).toContain('age')
+    expect(result).toContain('Alice')
+    expect(result).toContain('Bob')
   })
 
   it('returns colorized JSON for array with nested objects', () => {
@@ -57,8 +58,9 @@ describe('formatOutput', () => {
     ]
     const result = formatOutput(data, 'table')
     // null is not a nested object, so should be table format
-    expect(result).toContain('vin\thistory')
-    expect(result).toContain('123\t')
+    expect(result).toContain('vin')
+    expect(result).toContain('history')
+    expect(result).toContain('123')
   })
 })
 

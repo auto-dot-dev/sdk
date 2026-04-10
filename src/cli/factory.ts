@@ -151,10 +151,18 @@ export function formatOutput(data: unknown, format: string): string {
     const hasNested = Object.values(data[0] as object).some((v) => typeof v === 'object' && v !== null)
     if (hasNested) return colorizeJson(JSON.stringify(data, null, 2))
     const keys = Object.keys(data[0] as object)
-    const rows = (data as Record<string, unknown>[]).map((row) =>
-      keys.map((k) => String(row[k] ?? '')).join('\t'),
+    const allRows = (data as Record<string, unknown>[]).map((row) =>
+      keys.map((k) => String(row[k] ?? '')),
     )
-    return [keys.join('\t'), ...rows].join('\n')
+    const colWidths = keys.map((k, i) =>
+      Math.max(k.length, ...allRows.map((r) => r[i]!.length)),
+    )
+    const pad = (s: string, w: number) => s + ' '.repeat(Math.max(0, w - s.length))
+    const header = keys.map((k, i) => pad(k, colWidths[i]!)).join('  ')
+    const body = allRows.map((row) =>
+      row.map((val, i) => pad(val, colWidths[i]!)).join('  '),
+    )
+    return [header, ...body].join('\n')
   }
   return colorizeJson(JSON.stringify(data, null, 2))
 }
