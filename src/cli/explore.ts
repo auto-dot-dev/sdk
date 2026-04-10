@@ -1,6 +1,6 @@
 import { Command } from 'commander'
-import { ENDPOINTS, EndpointDefinition } from '../core/endpoints'
-import { brand, dim, value, accent, hint, tierBadge, label, formatError } from './colors'
+import { ENDPOINTS, type EndpointDefinition } from '../core/endpoints'
+import { accent, brand, dim, formatError, hint, label, tierBadge, value } from './colors'
 
 export interface ExploreEntry {
   name: string
@@ -117,7 +117,7 @@ export function getEndpointDetail(name: string): EndpointDetail | null {
   if (!ep) return null
 
   // Find the key in PARAM_DETAILS — try direct name match, then camelCase conversion
-  const key = Object.keys(ENDPOINTS).find((k) => ENDPOINTS[k].name === name) ?? name
+  const key = Object.keys(ENDPOINTS).find((k) => (ENDPOINTS as Record<string, { name: string }>)[k]!.name === name) ?? name
   const parameters = PARAM_DETAILS[key] ?? []
 
   return {
@@ -171,7 +171,7 @@ export function buildExploreCommand(): Command {
       const tiers: Record<string, ExploreEntry[]> = {}
       for (const e of entries) {
         if (!tiers[e.tier]) tiers[e.tier] = []
-        tiers[e.tier].push(e)
+        tiers[e.tier]!.push(e)
       }
 
       for (const [tier, eps] of Object.entries(tiers)) {

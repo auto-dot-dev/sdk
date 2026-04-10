@@ -38,11 +38,11 @@ export function createSpinner(label?: string): Spinner {
 
   // Hide cursor — use stderr to match CLI status output convention
   // (stdout is reserved for data/JSON output)
-  process.stderr.write('\x1B[?25l' + `\r\x1B[K${brand(FRAMES[frameIndex % FRAMES.length])} ${message}`)
+  process.stderr.write('\x1B[?25l' + `\r\x1B[K${brand(FRAMES[frameIndex % FRAMES.length]!)} ${message}`)
   frameIndex++
 
   const interval = setInterval(() => {
-    const frame = brand(FRAMES[frameIndex % FRAMES.length])
+    const frame = brand(FRAMES[frameIndex % FRAMES.length]!)
     process.stderr.write(`\r\x1B[K${frame} ${message}`)
     frameIndex++
   }, FRAME_INTERVAL)

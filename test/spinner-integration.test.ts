@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { shouldSuppressSpinner } from '../src/cli/commands'
+import { shouldSuppressSpinner } from '../src/cli/factory'
 
 describe('spinner suppression', () => {
   it('shouldSuppressSpinner returns true for json format', () => {

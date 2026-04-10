@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatOutput, colorizeJson } from '../../src/cli/commands'
+import { formatOutput, colorizeJson } from '../../src/cli/factory'
 
 describe('formatOutput', () => {
   it('returns raw JSON for json format', () => {
