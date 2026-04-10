@@ -99,12 +99,14 @@ export function makeCommand(def: CommandDef): Command {
       }
 
       const endpointKey = def.endpointKey ?? toCamelCase(def.name)
+      const start = Date.now()
       const { data } = await client.request(endpointKey, params)
+      const elapsed = ((Date.now() - start) / 1000).toFixed(2)
 
       spinner.stop()
 
       const endpoint = def.name
-      console.error(formatSuccess(`${brand(endpoint)}  ${hint('200')}`))
+      console.error(formatSuccess(`${brand(endpoint)}  ${hint('200')}  ${hint(`${elapsed}s`)}`))
       console.error()
       console.log(formatOutput(data, getFormat(options)))
     } catch (err) {
