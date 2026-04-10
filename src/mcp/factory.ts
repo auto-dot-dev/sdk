@@ -8,6 +8,7 @@ type EndpointDefinition = { description: string; path: string }
 
 export interface McpToolDef {
   endpoint: string
+  name?: string
   params: Record<string, z.ZodType>
   queryMap?: Record<string, string>
 }
@@ -17,7 +18,7 @@ export type McpErrorResult = { content: { type: 'text'; text: string }[] }
 const POSITIONAL_PARAMS = new Set(['vin', 'state', 'plate'])
 
 export function registerApiTool(server: McpServer, client: AutoDevClient, def: McpToolDef): void {
-  const name = `auto_${def.endpoint}`
+  const name = def.name ?? `auto_${def.endpoint}`
   const definition = (ENDPOINTS as Record<string, typeof ENDPOINTS[keyof typeof ENDPOINTS] | undefined>)[def.endpoint]
   if (!definition) {
     throw new Error(`Unknown endpoint: ${def.endpoint}`)
@@ -86,7 +87,7 @@ export function toToolDefinitions(defs: McpToolDef[]): ToolDefinition[] {
     }
 
     return {
-      name: `auto_${def.endpoint}`,
+      name: def.name ?? `auto_${def.endpoint}`,
       description: definition.description,
       inputSchema: { type: 'object' as const, properties, required },
     }
