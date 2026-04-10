@@ -2,7 +2,7 @@ import { Command } from 'commander'
 import { resolveAuth } from '../auth/resolve'
 import { AutoDevClient } from '../core/client'
 import { AutoDevError } from '../errors'
-import { brand, brown, formatError, formatSuccess, hint, label, limeGreen, purple, value, yellowNum } from './colors'
+import { brand, brown, formatError, formatSuccess, hint, label, limeGreen, value, yellowNum } from './colors'
 import { createSpinner } from './spinner'
 
 // ── Types ──────────────────────────────────────────────────────────────
