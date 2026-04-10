@@ -27,12 +27,12 @@ export function registerApiTool(server: McpServer, client: AutoDevClient, def: M
   server.registerTool(name, {
     description: definition.description,
     inputSchema: def.params,
-  }, async (args: Record<string, string | undefined>) => {
+  }, async (args) => {
     try {
       const positional: Record<string, string> = {}
       const query: Record<string, string> = {}
 
-      for (const [key, val] of Object.entries(args)) {
+      for (const [key, val] of Object.entries(args as Record<string, string | undefined>)) {
         if (val === undefined) continue
         if (POSITIONAL_PARAMS.has(key)) {
           positional[key] = val
