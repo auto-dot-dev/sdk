@@ -84,7 +84,7 @@ async function apiGet(path: string, apiKey: string, options?: { raw?: boolean; s
   return isRaw ? data : stripMetadata(data)
 }
 
-function colorizeJson(json: string): string {
+export function colorizeJson(json: string): string {
   // Color keys cyan, then values by type
   return json
     .replace(/"([^"]+)":/g, (_, key) => `${value(`"${key}"`)}:`)
@@ -97,7 +97,7 @@ function colorizeJson(json: string): string {
 
 }
 
-function formatOutput(data: unknown, format: string): string {
+export function formatOutput(data: unknown, format: string): string {
   if (format === 'json') {
     return JSON.stringify(data, null, 2)
   }
