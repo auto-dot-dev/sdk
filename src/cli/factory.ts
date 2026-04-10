@@ -1,11 +1,9 @@
 import { Command } from 'commander'
-import { getValidToken } from '../auth/oauth'
-import { loadConfig } from '../core/config'
-import { resolveRaw, stripMetadata } from '../core/strip'
-import { brand, brown, formatError, formatSuccess, hint, label, limeGreen, purple, red, value, yellowNum } from './colors'
+import { resolveAuth } from '../auth/resolve'
+import { AutoDevClient } from '../core/client'
+import { AutoDevError } from '../errors'
+import { brand, brown, formatError, formatSuccess, hint, label, limeGreen, purple, value, yellowNum } from './colors'
 import { createSpinner } from './spinner'
-
-const BASE_URL = process.env.AUTODEV_BASE_URL ?? 'https://api.auto.dev'
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -26,12 +24,17 @@ export interface CommandDef {
   name: string
   description: string
   args?: ArgDef[]
-  endpoint: string | ((...args: string[]) => string)
+  endpointKey?: string
   extraOptions?: OptionDef[]
   queryParams?: QueryParamMap
 }
 
 const DEFAULT_ARGS: ArgDef[] = [{ name: 'vin', desc: 'Vehicle Identification Number' }]
+
+/** Convert hyphenated command name to camelCase endpoint key */
+function toCamelCase(name: string): string {
+  return name.replace(/-([a-z])/g, (_, c) => c.toUpperCase())
+}
 
 // ── Factory ────────────────────────────────────────────────────────────
 
@@ -62,120 +65,65 @@ export function makeCommand(def: CommandDef): Command {
     const options = actionArgs[actionArgs.length - 2] as Record<string, string>
     const positionalArgs = actionArgs.slice(0, args.length) as (string | undefined)[]
 
-    const apiKey = await getApiKey(options)
+    const suppress = shouldSuppressSpinner(options)
+    const spinner = suppress ? { stop() {} } : createSpinner()
 
-    // Build endpoint path
-    let path: string
-    if (typeof def.endpoint === 'function') {
-      const definedArgs = positionalArgs.filter((a): a is string => a !== undefined)
-      path = def.endpoint(...definedArgs)
-    } else {
-      // String endpoint — append positional args that have values
-      const definedArgs = positionalArgs.filter((a): a is string => a !== undefined)
-      path = definedArgs.length > 0
-        ? `${def.endpoint}/${definedArgs.join('/')}`
-        : def.endpoint
-    }
+    try {
+      const client = new AutoDevClient({
+        apiKey: () => resolveAuth({ apiKey: options.apiKey }),
+        baseUrl: process.env.AUTODEV_BASE_URL,
+        raw: !!options.raw,
+      })
 
-    // Build query params from extraOptions + queryParams mapping
-    if (def.queryParams) {
-      const params = new URLSearchParams()
-      for (const [optKey, paramKey] of Object.entries(def.queryParams)) {
-        const val = options[optKey]
-        if (val !== undefined) {
-          params.set(paramKey, val)
+      // Build params from positional args
+      const params: Record<string, unknown> = {}
+      for (let i = 0; i < args.length; i++) {
+        const argVal = positionalArgs[i]
+        if (argVal !== undefined) {
+          params[args[i]!.name] = argVal
         }
       }
-      const query = params.toString()
-      if (query) path += `?${query}`
-    }
 
-    const data = await apiGet(path, apiKey, {
-      raw: !!options.raw,
-      suppressSpinner: shouldSuppressSpinner(options),
-    })
-    console.log(formatOutput(data, getFormat(options)))
+      // Build query from queryParams mapping
+      if (def.queryParams) {
+        const query: Record<string, string> = {}
+        for (const [optKey, paramKey] of Object.entries(def.queryParams)) {
+          const val = options[optKey]
+          if (val !== undefined) {
+            query[paramKey] = val
+          }
+        }
+        if (Object.keys(query).length > 0) {
+          params.query = query
+        }
+      }
+
+      const endpointKey = def.endpointKey ?? toCamelCase(def.name)
+      const { data } = await client.request(endpointKey, params)
+
+      spinner.stop()
+
+      const endpoint = def.name
+      console.error(formatSuccess(`${brand(endpoint)}  ${hint('200')}`))
+      console.error()
+      console.log(formatOutput(data, getFormat(options)))
+    } catch (err) {
+      spinner.stop()
+      if (err instanceof AutoDevError) {
+        console.error(formatError(`${err.status}: ${err.message}`))
+        if (err.suggestion) {
+          console.error(`\n  ${hint(err.suggestion)}\n`)
+        }
+        process.exit(1)
+      }
+      throw err
+    }
   })
 
   return cmd
 }
 
 // ── Helpers (moved from commands.ts) ───────────────────────────────────
-
-async function getApiKey(options: Record<string, string>): Promise<string> {
-  const apiKey =
-    options.apiKey ??
-    process.env.AUTODEV_API_KEY ??
-    await getValidToken()
-
-  if (!apiKey) {
-    console.error(formatError('No API key found', 'Set AUTODEV_API_KEY or run: auto login'))
-    process.exit(1)
-  }
-
-  return apiKey as string
-}
-
-async function apiGet(path: string, apiKey: string, options?: { raw?: boolean; suppressSpinner?: boolean }): Promise<unknown> {
-  const url = `${BASE_URL}${path}`
-  if (process.env.DEBUG) {
-    console.error(`[DEBUG] GET ${url}`)
-    console.error(`[DEBUG] Token: ${apiKey.substring(0, 10)}...${apiKey.substring(apiKey.length - 5)}`)
-  }
-  const spinner = options?.suppressSpinner ? { stop() {} } : createSpinner()
-  const start = Date.now()
-  let response: Response
-  try {
-    response = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        Accept: 'application/json',
-      },
-    })
-  } catch (err) {
-    spinner.stop()
-    throw err
-  }
-  const elapsed = ((Date.now() - start) / 1000).toFixed(2)
-
-  spinner.stop()
-  if (!response.ok) {
-    const body = await response.json().catch(() => ({ error: response.statusText }))
-
-    if (response.status === 402) {
-      const upgradeLink = body?.upgradeLink ?? 'https://auto.dev/pricing'
-      const tier = upgradeLink.match(/tier=(\w+)/)?.[1] ?? 'a higher'
-      const endpointName = path.split('?')[0]!.split('/').filter(Boolean)[0] ?? path
-      console.error(formatError(`${label(endpointName)} requires a ${purple(tier)} plan`))
-      console.error(`\n  ${hint('Upgrade your plan:')} ${limeGreen(upgradeLink)}`)
-      console.error(`  ${hint('Manage account:')}   ${limeGreen('https://auto.dev/dashboard')}\n`)
-      process.exit(1)
-    }
-
-    let errorMsg: string
-    if (body?.error && typeof body.error === 'object' && body.error.error) {
-      errorMsg = body.error.error
-    } else if (typeof body?.error === 'string') {
-      errorMsg = body.error
-    } else if (typeof body?.message === 'string') {
-      errorMsg = body.message
-    } else {
-      errorMsg = response.statusText
-    }
-    console.error(formatError(`${response.status}: ${errorMsg}`))
-    process.exit(1)
-  }
-  const endpoint = path.split('?')[0]!.split('/').filter(Boolean)[0] ?? path
-  console.error(formatSuccess(`${brand(endpoint)}  ${hint(String(response.status))}  ${hint(`${elapsed}s`)}`))
-  console.error()
-  const data = await response.json() as Record<string, unknown>
-  const config = loadConfig()
-  const isRaw = resolveRaw({
-    consumer: options?.raw,
-    config: config.raw,
-  })
-  return isRaw ? data : stripMetadata(data)
-}
 
 export function colorizeJson(json: string): string {
   return json

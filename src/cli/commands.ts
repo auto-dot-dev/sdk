@@ -1,17 +1,17 @@
 import type { Command } from 'commander'
-import { makeCommand, type CommandDef } from './factory'
+import { type CommandDef, makeCommand } from './factory'
 
 const commands: CommandDef[] = [
   // Simple VIN commands
-  { name: 'decode',       description: 'Decode a VIN — returns make, model, year, trim, engine, drivetrain', endpoint: '/vin' },
-  { name: 'photos',       description: 'Get vehicle photos by VIN',                                          endpoint: '/photos' },
-  { name: 'specs',        description: 'Get detailed vehicle specifications by VIN',                         endpoint: '/specs' },
-  { name: 'build',        description: 'Get OEM build and trim data by VIN',                                 endpoint: '/build' },
-  { name: 'recalls',      description: 'Get safety recalls by VIN',                                          endpoint: '/recalls' },
-  { name: 'open-recalls', description: 'Get open/unresolved recalls by VIN',                                 endpoint: '/openrecalls' },
+  { name: 'decode',       description: 'Decode a VIN — returns make, model, year, trim, engine, drivetrain' },
+  { name: 'photos',       description: 'Get vehicle photos by VIN' },
+  { name: 'specs',        description: 'Get detailed vehicle specifications by VIN' },
+  { name: 'build',        description: 'Get OEM build and trim data by VIN' },
+  { name: 'recalls',      description: 'Get safety recalls by VIN' },
+  { name: 'open-recalls', description: 'Get open/unresolved recalls by VIN' },
 
   // VIN + extra query params
-  { name: 'payments', description: 'Calculate monthly payments by VIN', endpoint: '/payments',
+  { name: 'payments', description: 'Calculate monthly payments by VIN',
     extraOptions: [
       { flags: '--price <price>',        description: 'Vehicle sales price' },
       { flags: '--zip <zip>',            description: 'ZIP code for tax/fee calculations' },
@@ -23,7 +23,7 @@ const commands: CommandDef[] = [
     queryParams: { price: 'price', zip: 'zip', downPayment: 'downPayment', loanTerm: 'loanTerm', docFee: 'docFee', tradeIn: 'tradeIn' },
   },
 
-  { name: 'apr', description: 'Get interest rates by VIN and credit profile', endpoint: '/apr',
+  { name: 'apr', description: 'Get interest rates by VIN and credit profile',
     extraOptions: [
       { flags: '--year <year>',             description: 'Model year' },
       { flags: '--make <make>',             description: 'Vehicle manufacturer' },
@@ -36,7 +36,7 @@ const commands: CommandDef[] = [
     queryParams: { year: 'year', make: 'make', model: 'model', zip: 'zip', creditScore: 'creditScore', vehicleAge: 'vehicleAge', vehicleMileage: 'vehicleMileage' },
   },
 
-  { name: 'tco', description: 'Calculate total cost of ownership by VIN', endpoint: '/tco',
+  { name: 'tco', description: 'Calculate total cost of ownership by VIN',
     extraOptions: [
       { flags: '--zip <zip>',      description: 'ZIP code for location-based calculations' },
       { flags: '--from-zip <zip>', description: 'ZIP code for delivery/transport calculations' },
@@ -44,7 +44,7 @@ const commands: CommandDef[] = [
     queryParams: { zip: 'zip', fromZip: 'fromZip' },
   },
 
-  { name: 'taxes', description: 'Estimate taxes and fees by VIN and ZIP code', endpoint: '/taxes',
+  { name: 'taxes', description: 'Estimate taxes and fees by VIN and ZIP code',
     extraOptions: [
       { flags: '--price <price>',        description: 'Vehicle price (default 25000)' },
       { flags: '--zip <zip>',            description: 'ZIP code for tax jurisdiction (default 94020)' },
@@ -60,13 +60,11 @@ const commands: CommandDef[] = [
   // Multi-arg command
   { name: 'plate', description: 'Resolve a license plate to a VIN',
     args: [{ name: 'state', desc: 'Two-letter state abbreviation' }, { name: 'plate', desc: 'License plate number' }],
-    endpoint: (state, plate) => `/plate/${state}/${plate}`,
   },
 
   // Listings — optional VIN for single lookup, or search with filters
   { name: 'listings', description: 'Search vehicle listings or look up by VIN',
     args: [{ name: 'vin', desc: 'VIN (optional — omit to search)', optional: true }],
-    endpoint: '/listings',
     extraOptions: [
       { flags: '--make <make>',         description: 'Vehicle make (maps to vehicle.make)' },
       { flags: '--model <model>',       description: 'Vehicle model (maps to vehicle.model)' },
@@ -89,7 +87,7 @@ const commands: CommandDef[] = [
   },
 
   // No-arg command
-  { name: 'usage', description: 'Get account usage statistics', args: [], endpoint: '/usage' },
+  { name: 'usage', description: 'Get account usage statistics', args: [] },
 ]
 
 export function buildApiCommands(): Command[] {

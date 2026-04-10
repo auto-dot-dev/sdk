@@ -85,7 +85,12 @@ export class AutoDevClient {
     let path = pathTemplate
 
     if (params?.vin) {
-      path = path.replace('{vin}', params.vin)
+      if (path.includes('{vin}')) {
+        path = path.replace('{vin}', params.vin)
+      } else {
+        // Append VIN for endpoints like /listings where VIN is optional
+        path = `${path}/${params.vin}`
+      }
     }
     if (params?.state) {
       path = path.replace('{state}', params.state)
