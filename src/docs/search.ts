@@ -69,25 +69,32 @@ export function searchDocs(query: string): DocEntry[] {
     }
   }
 
-  // Sort by relevance: exact > last segment match > starts-with > shorter name (more specific) > content-only
-  const queryLower = query.toLowerCase().replace(/([A-Z])/g, (m) => '-' + m.toLowerCase()) // camelCase → kebab
+  // Sort by relevance: alias match > name term hits > content term hits > name length
+  const aliasValues = new Set(Object.values(ALIASES))
   results.sort((a, b) => {
     const aLower = a.name.toLowerCase()
     const bLower = b.name.toLowerCase()
-    const aLastSeg = aLower.split('-').pop() ?? ''
-    const bLastSeg = bLower.split('-').pop() ?? ''
-    const aScore = aLower === queryLower ? 0
-      : aLastSeg === queryLower ? 1          // "recalls" matches vehicle-recalls (last segment)
-      : aLower.startsWith(queryLower) ? 2    // "open" matches open-recalls
-      : aLower.includes(queryLower) ? 3
-      : 4
-    const bScore = bLower === queryLower ? 0
-      : bLastSeg === queryLower ? 1
-      : bLower.startsWith(queryLower) ? 2
-      : bLower.includes(queryLower) ? 3
-      : 4
-    if (aScore !== bScore) return aScore - bScore
-    return aLower.length - bLower.length     // shorter name = more specific
+    const aSegs = aLower.split('-')
+    const bSegs = bLower.split('-')
+
+    // Check if any query term is a known alias that resolves to this doc
+    const aAliasHit = terms.some((t) => ALIASES[t] === aLower) ? 1 : 0
+    const bAliasHit = terms.some((t) => ALIASES[t] === bLower) ? 1 : 0
+    if (aAliasHit !== bAliasHit) return bAliasHit - aAliasHit
+
+    // Count how many query terms appear in the doc name or its segments
+    const aNameHits = terms.filter((t) => aSegs.includes(t) || aLower.includes(t)).length
+    const bNameHits = terms.filter((t) => bSegs.includes(t) || bLower.includes(t)).length
+    if (aNameHits !== bNameHits) return bNameHits - aNameHits
+
+    // Count how many query terms appear in the content
+    const aContentLower = a.content.toLowerCase()
+    const bContentLower = b.content.toLowerCase()
+    const aContentHits = terms.filter((t) => aContentLower.includes(t)).length
+    const bContentHits = terms.filter((t) => bContentLower.includes(t)).length
+    if (aContentHits !== bContentHits) return bContentHits - aContentHits
+
+    return aLower.length - bLower.length
   })
 
   return results
