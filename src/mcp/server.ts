@@ -129,7 +129,7 @@ export interface McpServerOptions {
 }
 
 export function createMcpServer(options: McpServerOptions): McpServer {
-  const client = new AutoDevClient(options)
+  const client = new AutoDevClient({ ...options, clientType: 'mcp-stdio' })
   const server = new McpServer({
     name: 'auto.dev',
     version: '1.0.0',

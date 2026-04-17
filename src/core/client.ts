@@ -1,12 +1,15 @@
+import pkg from '../../package.json' with { type: 'json' }
 import { createAuthHeaders } from '../auth/api-key'
 import { AutoDevError, type AutoDevErrorCode } from '../errors'
 import { loadConfig } from './config'
 import { ENDPOINTS, type EndpointDefinition } from './endpoints'
 import { resolveRaw, stripMetadata } from './strip'
-import type { AutoDevClientOptions, AutoDevResponse } from './types'
+import type { AutoDevClientOptions, AutoDevResponse, ClientType } from './types'
 
 export { ENDPOINTS } from './endpoints'
 export type { AutoDevClientOptions, AutoDevResponse } from './types'
+
+const UA_MAJOR = Math.max(1, parseInt(pkg.version.split('.')[0] ?? '0', 10))
 
 interface RequestParams {
   vin?: string
@@ -22,6 +25,7 @@ export class AutoDevClient {
   private readonly apiKeyOrResolver: string | (() => Promise<string>)
   private readonly org?: string
   private readonly raw?: boolean
+  private readonly clientType: ClientType
 
   constructor(options?: AutoDevClientOptions) {
     const apiKey = options?.apiKey ?? process.env.AUTODEV_API_KEY
@@ -30,6 +34,7 @@ export class AutoDevClient {
     this.org = options?.org
     this.baseUrl = options?.baseUrl ?? 'https://api.auto.dev'
     this.raw = options?.raw
+    this.clientType = options?.clientType ?? 'sdk'
   }
 
   private async resolveApiKey(): Promise<string> {
@@ -50,6 +55,8 @@ export class AutoDevClient {
     const headers = {
       ...createAuthHeaders({ apiKey, org: this.org }),
       Accept: 'application/json',
+      'User-Agent': `auto.dev-${this.clientType}/${UA_MAJOR} (+https://auto.dev)`,
+      'X-Client-Type': this.clientType,
     }
 
     const response = await fetch(url, { method: definition.method, headers })

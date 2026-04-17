@@ -7,11 +7,14 @@ export interface AutoDevResponse<T> {
   }
 }
 
+export type ClientType = 'sdk' | 'cli' | 'mcp-stdio'
+
 export interface AutoDevClientOptions {
   apiKey?: string | (() => Promise<string>)
   org?: string
   baseUrl?: string
   raw?: boolean
+  clientType?: ClientType
 }
 
 // Re-export generated param types under SDK-friendly names

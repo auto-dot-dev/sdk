@@ -73,6 +73,7 @@ export function makeCommand(def: CommandDef): Command {
         apiKey: () => resolveAuth({ apiKey: options.apiKey }),
         baseUrl: process.env.AUTODEV_BASE_URL,
         raw: !!options.raw,
+        clientType: 'cli',
       })
 
       // Build params from positional args

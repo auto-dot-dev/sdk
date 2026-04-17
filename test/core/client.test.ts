@@ -73,6 +73,62 @@ describe('AutoDevClient', () => {
     fetchSpy.mockRestore()
   })
 
+  it('sends User-Agent and X-Client-Type headers identifying the sdk by default', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify({}), {
+        status: 200,
+        headers: { 'content-type': 'application/json', 'x-request-id': 'req_ua' },
+      }),
+    )
+
+    await client.request('decode', { vin: '1HGCM82633A004352' })
+
+    const [, init] = fetchSpy.mock.calls[0]
+    const headers = init?.headers as Record<string, string>
+    expect(headers['User-Agent']).toBe('auto.dev-sdk/1 (+https://auto.dev)')
+    expect(headers['X-Client-Type']).toBe('sdk')
+
+    fetchSpy.mockRestore()
+  })
+
+  it('identifies as cli when clientType is cli', async () => {
+    const cliClient = new AutoDevClient({ apiKey: 'ad_sk_test123', clientType: 'cli' })
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify({}), {
+        status: 200,
+        headers: { 'content-type': 'application/json', 'x-request-id': 'req_cli' },
+      }),
+    )
+
+    await cliClient.request('decode', { vin: '1HGCM82633A004352' })
+
+    const [, init] = fetchSpy.mock.calls[0]
+    const headers = init?.headers as Record<string, string>
+    expect(headers['User-Agent']).toBe('auto.dev-cli/1 (+https://auto.dev)')
+    expect(headers['X-Client-Type']).toBe('cli')
+
+    fetchSpy.mockRestore()
+  })
+
+  it('identifies as mcp-stdio when clientType is mcp-stdio', async () => {
+    const mcpClient = new AutoDevClient({ apiKey: 'ad_sk_test123', clientType: 'mcp-stdio' })
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify({}), {
+        status: 200,
+        headers: { 'content-type': 'application/json', 'x-request-id': 'req_mcp' },
+      }),
+    )
+
+    await mcpClient.request('decode', { vin: '1HGCM82633A004352' })
+
+    const [, init] = fetchSpy.mock.calls[0]
+    const headers = init?.headers as Record<string, string>
+    expect(headers['User-Agent']).toBe('auto.dev-mcp-stdio/1 (+https://auto.dev)')
+    expect(headers['X-Client-Type']).toBe('mcp-stdio')
+
+    fetchSpy.mockRestore()
+  })
+
   it('passes query params for listings', async () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
       new Response(JSON.stringify([]), {
