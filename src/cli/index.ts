@@ -26,7 +26,7 @@ const program = new Command()
 if (process.argv.includes('--mcp')) {
   ;(async () => {
     await startMcpServer({
-      apiKey: () => resolveAuth(),
+      apiKey: () => resolveAuth({ clientType: 'mcp-stdio' }),
     })
   })()
 } else {
@@ -43,7 +43,7 @@ if (process.argv.includes('--mcp')) {
     console.log('Organization listing requires authentication. Run: auto login')
   })
   orgs.command('switch').argument('<slug>', 'Organization slug').description('Switch active organization').action(async (slug) => {
-    const token = await getValidToken()
+    const token = await getValidToken('cli')
     if (!token) { console.error('Not logged in. Run: auto login'); process.exit(1) }
     console.log(`Switched to organization: ${slug}`)
   })

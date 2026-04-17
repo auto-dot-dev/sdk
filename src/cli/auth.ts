@@ -3,8 +3,11 @@ import { platform } from 'node:os'
 import { Command } from 'commander'
 import { DEFAULT_AUTH_CONFIG } from '../auth/config'
 import { authorizeDevice, clearCredentials, getValidToken, pollForTokens, saveApiKey, saveTokenData } from '../auth/oauth'
+import { buildAuthHeaders } from '../core/user-agent'
 import { brand, formatError, formatSuccess, header, hint, kv, value } from './colors'
 import { createSpinner } from './spinner'
+
+const CLI_HEADERS = buildAuthHeaders('cli')
 
 function openBrowser(url: string): void {
   const cmd = platform() === 'darwin' ? 'open' : platform() === 'win32' ? 'start' : 'xdg-open'
@@ -24,7 +27,7 @@ export function buildLoginCommand(): Command {
 
       try {
         const deviceSpinner = createSpinner()
-        const deviceCode = await authorizeDevice(DEFAULT_AUTH_CONFIG.clientId)
+        const deviceCode = await authorizeDevice(DEFAULT_AUTH_CONFIG.clientId, CLI_HEADERS)
         deviceSpinner.stop()
 
         const verifyUrl = deviceCode.verification_uri_complete || `${deviceCode.verification_uri}?user_code=${deviceCode.user_code}`
@@ -35,7 +38,7 @@ export function buildLoginCommand(): Command {
         openBrowser(verifyUrl)
         console.log(hint('Waiting for authorization...'))
 
-        const token = await pollForTokens(DEFAULT_AUTH_CONFIG.clientId, deviceCode.device_code, deviceCode.interval, deviceCode.expires_in)
+        const token = await pollForTokens(DEFAULT_AUTH_CONFIG.clientId, deviceCode.device_code, deviceCode.interval, deviceCode.expires_in, CLI_HEADERS)
 
         await saveTokenData(token)
         console.log(formatSuccess('Login successful!'))
@@ -52,7 +55,7 @@ export function buildLogoutCommand(): Command {
   const cmd = new Command('logout')
     .description('Log out and clear stored credentials')
     .action(async () => {
-      await clearCredentials()
+      await clearCredentials('cli')
       console.log(formatSuccess('Logged out. Credentials cleared.'))
     })
 
@@ -63,14 +66,14 @@ export function buildWhoamiCommand(): Command {
   const cmd = new Command('whoami')
     .description('Show current user and active org')
     .action(async () => {
-      const token = await getValidToken()
+      const token = await getValidToken('cli')
       if (!token) {
         console.log(formatError('Not logged in', 'Run: auto login'))
         return
       }
       const { getUser } = await import('../auth/oauth')
       const whoamiSpinner = createSpinner()
-      const { user } = await getUser(token)
+      const { user } = await getUser(token, CLI_HEADERS)
       whoamiSpinner.stop()
       if (user) {
         console.log(`\n${header('auto.dev')}`)

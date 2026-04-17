@@ -1,15 +1,13 @@
-import pkg from '../../package.json' with { type: 'json' }
 import { createAuthHeaders } from '../auth/api-key'
 import { AutoDevError, type AutoDevErrorCode } from '../errors'
 import { loadConfig } from './config'
 import { ENDPOINTS, type EndpointDefinition } from './endpoints'
 import { resolveRaw, stripMetadata } from './strip'
 import type { AutoDevClientOptions, AutoDevResponse, ClientType } from './types'
+import { buildAuthHeaders } from './user-agent'
 
 export { ENDPOINTS } from './endpoints'
 export type { AutoDevClientOptions, AutoDevResponse } from './types'
-
-const UA_MAJOR = Math.max(1, parseInt(pkg.version.split('.')[0] ?? '0', 10))
 
 interface RequestParams {
   vin?: string
@@ -55,8 +53,7 @@ export class AutoDevClient {
     const headers = {
       ...createAuthHeaders({ apiKey, org: this.org }),
       Accept: 'application/json',
-      'User-Agent': `auto.dev-${this.clientType}/${UA_MAJOR} (+https://auto.dev)`,
-      'X-Client-Type': this.clientType,
+      ...buildAuthHeaders(this.clientType),
     }
 
     const response = await fetch(url, { method: definition.method, headers })

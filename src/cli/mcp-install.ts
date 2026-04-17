@@ -126,7 +126,7 @@ export function buildMcpCommand(): Command {
     .description('Install auto.dev MCP server into your AI tools')
     .action(async () => {
       // Check auth
-      const token = await getValidToken()
+      const token = await getValidToken('cli')
       if (!token) {
         console.log(formatError('You need to log in first', 'Run: auto login'))
         console.log()

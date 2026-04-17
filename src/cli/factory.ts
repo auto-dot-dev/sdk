@@ -70,7 +70,7 @@ export function makeCommand(def: CommandDef): Command {
 
     try {
       const client = new AutoDevClient({
-        apiKey: () => resolveAuth({ apiKey: options.apiKey }),
+        apiKey: () => resolveAuth({ apiKey: options.apiKey, clientType: 'cli' }),
         baseUrl: process.env.AUTODEV_BASE_URL,
         raw: !!options.raw,
         clientType: 'cli',
