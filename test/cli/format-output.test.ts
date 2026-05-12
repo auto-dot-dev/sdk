@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { formatOutput, colorizeJson } from '../../src/cli/factory'
 
 describe('formatOutput', () => {
@@ -64,11 +64,18 @@ describe('formatOutput', () => {
   })
 })
 
-describe('colorizeJson', () => {
+describe('colorizeJson (FORCE_COLOR=1)', () => {
+  beforeEach(() => {
+    vi.stubEnv('FORCE_COLOR', '1')
+    vi.stubEnv('NO_COLOR', '')
+  })
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
   it('colorizes keys', () => {
     const json = JSON.stringify({ make: 'Toyota' }, null, 2)
     const result = colorizeJson(json)
-    // Should contain ANSI codes (cyan for keys)
     expect(result).toContain('\x1b[')
     expect(result).toContain('make')
   })
@@ -76,30 +83,55 @@ describe('colorizeJson', () => {
   it('colorizes string values', () => {
     const json = JSON.stringify({ make: 'Toyota' }, null, 2)
     const result = colorizeJson(json)
+    expect(result).toContain('\x1b[')
     expect(result).toContain('Toyota')
   })
 
   it('colorizes numbers', () => {
     const json = JSON.stringify({ year: 2024 }, null, 2)
     const result = colorizeJson(json)
+    expect(result).toContain('\x1b[')
     expect(result).toContain('2024')
   })
 
   it('colorizes booleans', () => {
     const json = JSON.stringify({ online: true }, null, 2)
     const result = colorizeJson(json)
+    expect(result).toContain('\x1b[')
     expect(result).toContain('true')
   })
 
   it('colorizes null', () => {
     const json = JSON.stringify({ history: null }, null, 2)
     const result = colorizeJson(json)
+    expect(result).toContain('\x1b[')
     expect(result).toContain('null')
   })
 
   it('colorizes URLs differently from regular strings', () => {
     const json = JSON.stringify({ url: 'https://api.auto.dev/test' }, null, 2)
     const result = colorizeJson(json)
+    expect(result).toContain('\x1b[')
     expect(result).toContain('https://api.auto.dev/test')
+  })
+})
+
+describe('colorizeJson (NO_COLOR=1)', () => {
+  beforeEach(() => {
+    vi.stubEnv('NO_COLOR', '1')
+    vi.stubEnv('FORCE_COLOR', '')
+  })
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
+  it('emits no ANSI codes when NO_COLOR is set', () => {
+    const json = JSON.stringify({ make: 'Toyota', year: 2024, online: true, history: null }, null, 2)
+    const result = colorizeJson(json)
+    expect(result).not.toContain('\x1b[')
+    expect(result).toContain('Toyota')
+    expect(result).toContain('2024')
+    expect(result).toContain('true')
+    expect(result).toContain('null')
   })
 })

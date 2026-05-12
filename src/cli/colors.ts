@@ -3,10 +3,14 @@
  * Zero dependencies — uses raw ANSI escape codes.
  */
 
-const enabled = process.env.NO_COLOR === undefined && process.stdout.isTTY !== false
+function colorsEnabled(): boolean {
+  if (process.env.NO_COLOR) return false
+  if (process.env.FORCE_COLOR && process.env.FORCE_COLOR !== '0') return true
+  return process.stdout.isTTY !== false
+}
 
 function ansi(code: string) {
-  return (text: string) => enabled ? `${code}${text}\x1b[0m` : text
+  return (text: string) => colorsEnabled() ? `${code}${text}\x1b[0m` : text
 }
 
 // Core palette — matches auto.dev website
