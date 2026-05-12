@@ -66,11 +66,98 @@ Settings are stored in `~/.auto-dev/config.json`.
 
 ## MCP Server
 
+Auto.dev exposes its full vehicle data API as native [Model Context Protocol](https://modelcontextprotocol.io) tools. Two paths — pick one:
+
+| Path | Best for | Install |
+|------|----------|---------|
+| **Remote** — `https://mcp.auto.dev/mcp` | Hosted clients (Claude Desktop, ChatGPT), zero setup | None — just add the URL |
+| **Local stdio** — this SDK | CLI users, low-latency, offline-friendly | `npm i -g @auto.dev/sdk` |
+
+Both expose the same tools. Remote authenticates via OAuth (one click). Stdio uses `auto login` or `AUTODEV_API_KEY`.
+
+### Fastest path — auto-install stdio
+
 ```bash
 npx @auto.dev/sdk mcp install
 ```
 
-This installs the package globally (so MCP clients can find the `auto` binary) and auto-configures Claude Code, Claude Desktop, and Cursor. No API key needed — uses your login.
+Auto-configures Claude Code, Claude Desktop, and Cursor with the stdio MCP server.
+
+### Quickstart by Client
+
+#### Claude Code
+
+**Remote:**
+```bash
+claude mcp add -s user -t http auto-dev https://mcp.auto.dev/mcp
+```
+
+Then run `/mcp` and select **Authenticate** for `auto-dev`.
+
+**Stdio:**
+```bash
+npx @auto.dev/sdk mcp install
+```
+
+#### Claude Desktop
+
+**Remote:** Settings → Connectors → Add Custom Connector
+
+- **Name:** `auto-dev`
+- **URL:** `https://mcp.auto.dev/mcp`
+
+**Stdio:** `npx @auto.dev/sdk mcp install` (auto-configures `claude_desktop_config.json`). Restart Claude Desktop.
+
+#### Cursor
+
+**Remote:** Add to `~/.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "auto-dev": {
+      "url": "https://mcp.auto.dev/mcp"
+    }
+  }
+}
+```
+
+**Stdio:** `npx @auto.dev/sdk mcp install`.
+
+#### Windsurf
+
+**Remote:** Add to `~/.codeium/windsurf/mcp_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "auto-dev": {
+      "serverUrl": "https://mcp.auto.dev/mcp"
+    }
+  }
+}
+```
+
+**Stdio:** `npx @auto.dev/sdk mcp install`.
+
+#### VS Code Copilot
+
+**Remote:** Add to `.vscode/mcp.json` (workspace) or user settings:
+
+```json
+{
+  "servers": {
+    "auto-dev": {
+      "type": "http",
+      "url": "https://mcp.auto.dev/mcp"
+    }
+  }
+}
+```
+
+Requires VS Code 1.99+ with Copilot Agent mode.
+
+> **Full setup guide:** [docs.auto.dev/v2/mcp-quickstart](https://docs.auto.dev/v2/mcp-quickstart) — covers more clients and troubleshooting.
 
 ### Available MCP Tools
 
