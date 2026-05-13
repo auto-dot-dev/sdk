@@ -6,3 +6,8 @@ dist/
 .env.local
 /docs/
 
+# Local agent / tool artifacts
+CLAUDE.md
+node-compile-cache/
+update-check/
+playwright_chromiumdev_profile-*/
