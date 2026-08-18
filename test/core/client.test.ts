@@ -160,6 +160,66 @@ describe('AutoDevClient', () => {
     fetchSpy.mockRestore()
   })
 
+  it('surfaces flat string error bodies as the error message', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify({ error: 'Growth plan required' }), {
+        status: 403,
+        headers: { 'content-type': 'application/json', 'x-request-id': 'req_err_flat' },
+      }),
+    )
+
+    await expect(client.request('specs', { vin: '1HGCM82633A004352' })).rejects.toMatchObject({
+      name: 'AutoDevError',
+      status: 403,
+      message: 'Growth plan required',
+    })
+
+    fetchSpy.mockRestore()
+  })
+
+  it('surfaces nested auth-middleware error bodies instead of [object Object]', async () => {
+    // The auth middleware returns { status, error: { message } } — not the flat { error: string } shape
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          status: 401,
+          error: { message: 'Authentication required. Get your API key at https://auto.dev/dashboard/api-keys' },
+        }),
+        {
+          status: 401,
+          headers: { 'content-type': 'application/json', 'x-request-id': 'req_err_nested' },
+        },
+      ),
+    )
+
+    await expect(client.request('decode', { vin: '1HGCM82633A004352' })).rejects.toMatchObject({
+      name: 'AutoDevError',
+      status: 401,
+      code: 'UNAUTHORIZED',
+      message: 'Authentication required. Get your API key at https://auto.dev/dashboard/api-keys',
+    })
+
+    fetchSpy.mockRestore()
+  })
+
+  it('falls back to statusText when the error body has no message', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify({ status: 401, error: {} }), {
+        status: 401,
+        statusText: 'Unauthorized',
+        headers: { 'content-type': 'application/json', 'x-request-id': 'req_err_empty' },
+      }),
+    )
+
+    await expect(client.request('decode', { vin: '1HGCM82633A004352' })).rejects.toMatchObject({
+      name: 'AutoDevError',
+      status: 401,
+      message: 'Unauthorized',
+    })
+
+    fetchSpy.mockRestore()
+  })
+
   it('builds plate URL with state and number path params', async () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
       new Response(JSON.stringify({ vin: '1HGCM82633A004352' }), {

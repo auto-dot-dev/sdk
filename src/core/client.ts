@@ -61,10 +61,15 @@ export class AutoDevClient {
 
     if (!response.ok) {
       const body = await response.json().catch(() => ({ error: response.statusText }))
-      const errorBody = body as { error?: string; suggestion?: string; upgradeLink?: string }
+      // Most endpoints return { error: string }; the auth middleware returns { error: { message } }
+      const errorBody = body as { error?: string | { message?: string }; suggestion?: string; upgradeLink?: string }
+      const message =
+        typeof errorBody.error === 'string'
+          ? errorBody.error
+          : (errorBody.error?.message ?? response.statusText)
       const code = this.statusToCode(response.status)
       const suggestion = this.getSuggestion(response.status, definition.tier, errorBody.upgradeLink)
-      throw new AutoDevError(response.status, code, errorBody.error ?? response.statusText, suggestion)
+      throw new AutoDevError(response.status, code, message, suggestion)
     }
 
     const rawData = (await response.json()) as T
