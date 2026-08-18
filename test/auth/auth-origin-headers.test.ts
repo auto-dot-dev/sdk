@@ -129,6 +129,12 @@ describe('getValidToken delegates to upstream refresh with clientType', () => {
 
 describe('clearCredentials accepts clientType', () => {
   it('accepts cli clientType without throwing', async () => {
+    // HOME is sandboxed by test/setup.ts, so this exercises the real code path
+    // without touching (or revoking) the developer's stored credentials.
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(new Response('{}', { status: 200, headers: { 'content-type': 'application/json' } }))
     await expect(clearCredentials('cli')).resolves.toBeUndefined()
+    fetchSpy.mockRestore()
   })
 })
