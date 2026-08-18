@@ -53,7 +53,20 @@ function cloneDocsAtRef(ref: string): string {
 
 function findDocsPath(): string {
   // 1. CLI arg — most explicit, wins over everything.
-  if (process.argv[2]) return process.argv[2]
+  const arg = process.argv[2]
+  if (arg) {
+    // Catch `pnpm build:docs DOCS_REF=main`. An env var placed after the command arrives here
+    // as a positional, and the arg check above wins, so it would otherwise be treated as a
+    // path — failing with "Product docs not found at: DOCS_REF=main/content/..." which names
+    // the symptom and not the mistake.
+    if (/^[A-Z][A-Z0-9_]*=/.test(arg)) {
+      throw new Error(
+        `"${arg}" looks like an environment variable, not a path. Put it before the command:\n` +
+          `  ${arg} pnpm build:docs`,
+      )
+    }
+    return arg
+  }
 
   // 2. A ref is a more specific request than a path, so it takes precedence over DOCS_PATH.
   if (process.env.DOCS_REF) return cloneDocsAtRef(process.env.DOCS_REF)
