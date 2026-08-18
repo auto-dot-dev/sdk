@@ -119,7 +119,8 @@ export function makeCommand(def: CommandDef): Command {
         }
         process.exit(1)
       }
-      throw err
+      console.error(formatError(err instanceof Error ? err.message : String(err)))
+      process.exit(1)
     }
   })
 

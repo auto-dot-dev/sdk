@@ -1,4 +1,5 @@
 import { getValidToken } from './oauth'
+import { AutoDevError } from '../errors'
 import type { ClientType } from '../core/types'
 
 export async function resolveAuth(options?: { apiKey?: string; clientType?: ClientType }): Promise<string> {
@@ -8,7 +9,7 @@ export async function resolveAuth(options?: { apiKey?: string; clientType?: Clie
     await getValidToken(options?.clientType ?? 'cli')
 
   if (!apiKey) {
-    throw new Error('No API key found. Set AUTODEV_API_KEY or run: auto login')
+    throw new AutoDevError(401, 'UNAUTHORIZED', 'No API key found', 'Set AUTODEV_API_KEY or run: auto login')
   }
 
   return apiKey as string

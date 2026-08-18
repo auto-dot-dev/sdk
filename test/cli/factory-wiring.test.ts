@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const ctorCalls: Array<Record<string, unknown>> = []
+let requestImpl: (() => Promise<unknown>) | null = null
 
 vi.mock('../../src/core/client', () => {
   class MockAutoDevClient {
@@ -8,6 +9,7 @@ vi.mock('../../src/core/client', () => {
       ctorCalls.push(opts)
     }
     async request() {
+      if (requestImpl) return requestImpl()
       return { data: {}, meta: { requestId: '', tier: 'starter' } }
     }
   }
@@ -38,5 +40,28 @@ describe('CLI makeCommand wiring', () => {
 
     logSpy.mockRestore()
     errSpy.mockRestore()
+  })
+
+  it('formats unexpected errors instead of rethrowing a raw stack trace', async () => {
+    requestImpl = async () => {
+      throw new Error('boom from below')
+    }
+    const cmd = makeCommand({ name: 'decode', description: 'Decode VIN' })
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {
+      throw new Error('__exit__')
+    }) as never)
+
+    await expect(cmd.parseAsync(['node', 'decode', '1HGCM82633A004352', '--json'])).rejects.toThrow('__exit__')
+
+    expect(exitSpy).toHaveBeenCalledWith(1)
+    const printed = errSpy.mock.calls.flat().join('\n')
+    expect(printed).toContain('boom from below')
+
+    logSpy.mockRestore()
+    errSpy.mockRestore()
+    exitSpy.mockRestore()
+    requestImpl = null
   })
 })
