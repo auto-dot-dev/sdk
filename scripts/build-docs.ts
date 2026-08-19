@@ -78,8 +78,8 @@ function findDocsPath(): string {
   const envFile = join(__dirname, '..', '.env')
   if (existsSync(envFile)) {
     const envContent = readFileSync(envFile, 'utf-8')
-    const match = envContent.match(/^DOCS_PATH=(.+)$/m)
-    if (match) return match[1].trim().replace(/^["']|["']$/g, '')
+    const docsPath = envContent.match(/^DOCS_PATH=(.+)$/m)?.[1]
+    if (docsPath) return docsPath.trim().replace(/^["']|["']$/g, '')
   }
 
   // 5. Try to find docs.auto.dev anywhere under ~/Workspace using find
@@ -117,8 +117,8 @@ function convertMdxToMarkdown(content: string): string {
     const entryRegex = /['"]?([\w.]+)['"]?\s*:\s*\{([^}]+)\}/g
     let entry
     while ((entry = entryRegex.exec(inner)) !== null) {
-      const name = entry[1]
-      const props = entry[2]
+      const name = entry[1] ?? ''
+      const props = entry[2] ?? ''
       const desc = props.match(/description:\s*'([^']*)'/)
       const type = props.match(/type:\s*'([^']*)'/)
       const def = props.match(/default:\s*'([^']*)'/)
