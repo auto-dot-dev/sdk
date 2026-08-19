@@ -3,25 +3,78 @@
  * Strips JSX components (TypeTable, Accordion, ClickableCodeBlock) into markdown equivalents.
  *
  * Usage: npx tsx scripts/build-docs.ts [docs-path]
- * Default docs path: DOCS_PATH env var or ../docs.auto.dev (sibling repo)
+ *
+ * Source resolution, in order: CLI arg, DOCS_REF, DOCS_PATH, .env, ~/Workspace, sibling repo.
+ *
+ * DOCS_REF fetches from GitHub instead of the filesystem:
+ *   DOCS_REF=main npx tsx scripts/build-docs.ts
+ *   DOCS_REF=feat/no-trials-copy npx tsx scripts/build-docs.ts
+ *
+ * Without it the script needs a local docs.auto.dev checkout, which is why regenerating
+ * src/docs/data.ts used to mean pointing .env at a path on one person's machine — and why the
+ * committed output could drift from the docs it claims to mirror with nothing to catch it.
  */
 
-import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from 'node:fs'
+import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync, mkdtempSync } from 'node:fs'
 import { join, basename, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execSync } from 'node:child_process'
-import { homedir } from 'node:os'
+import { homedir, tmpdir } from 'node:os'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
-function findDocsPath(): string {
-  // 1. CLI arg
-  if (process.argv[2]) return process.argv[2]
+const DOCS_REPO = process.env.DOCS_REPO ?? 'drivly/docs.auto.dev'
 
-  // 2. Env var
+/**
+ * Shallow-clone the docs repo at a ref and return the checkout path.
+ *
+ * Uses the ambient git credentials — a developer's existing auth locally, or a token-backed
+ * remote in CI. docs.auto.dev is private and this SDK is public, so a workflow using this needs
+ * a cross-org read token; there is no way around that and no attempt to work around it here.
+ */
+function cloneDocsAtRef(ref: string): string {
+  const dest = join(mkdtempSync(join(tmpdir(), 'autodev-docs-')), 'docs.auto.dev')
+  const url = `https://github.com/${DOCS_REPO}.git`
+  console.log(`Fetching ${DOCS_REPO}@${ref}`)
+  try {
+    execSync(`git clone --depth=1 --branch "${ref}" --quiet "${url}" "${dest}"`, {
+      stdio: ['ignore', 'ignore', 'pipe'],
+      timeout: 120_000,
+    })
+  } catch (err) {
+    const detail = err instanceof Error && 'stderr' in err ? String(err.stderr).trim() : String(err)
+    throw new Error(
+      `Could not fetch ${DOCS_REPO}@${ref}. Check the ref exists and that you have read access ` +
+        `(the repo is private). Underlying error: ${detail}`,
+    )
+  }
+  return dest
+}
+
+function findDocsPath(): string {
+  // 1. CLI arg — most explicit, wins over everything.
+  const arg = process.argv[2]
+  if (arg) {
+    // Catch `pnpm build:docs DOCS_REF=main`. An env var placed after the command arrives here
+    // as a positional, and the arg check above wins, so it would otherwise be treated as a
+    // path — failing with "Product docs not found at: DOCS_REF=main/content/..." which names
+    // the symptom and not the mistake.
+    if (/^[A-Z][A-Z0-9_]*=/.test(arg)) {
+      throw new Error(
+        `"${arg}" looks like an environment variable, not a path. Put it before the command:\n` +
+          `  ${arg} pnpm build:docs`,
+      )
+    }
+    return arg
+  }
+
+  // 2. A ref is a more specific request than a path, so it takes precedence over DOCS_PATH.
+  if (process.env.DOCS_REF) return cloneDocsAtRef(process.env.DOCS_REF)
+
+  // 3. Env var
   if (process.env.DOCS_PATH) return process.env.DOCS_PATH
 
-  // 3. Load from .env file if present
+  // 4. Load from .env file if present
   const envFile = join(__dirname, '..', '.env')
   if (existsSync(envFile)) {
     const envContent = readFileSync(envFile, 'utf-8')
@@ -29,7 +82,7 @@ function findDocsPath(): string {
     if (match) return match[1].trim().replace(/^["']|["']$/g, '')
   }
 
-  // 4. Try to find docs.auto.dev anywhere under ~/Workspace using find
+  // 5. Try to find docs.auto.dev anywhere under ~/Workspace using find
   try {
     const workspace = join(homedir(), 'Workspace')
     const result = execSync(
