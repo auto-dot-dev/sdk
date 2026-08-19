@@ -163,9 +163,9 @@ Requires VS Code 1.99+ with Copilot Agent mode.
 
 | Tool | Description | Plan |
 |------|-------------|------|
-| `auto_decode` | Decode a VIN | Starter |
-| `auto_photos` | Vehicle photos | Starter |
-| `auto_listings` | Search listings with filters | Starter |
+| `auto_decode` | Decode a VIN | Free |
+| `auto_photos` | Vehicle photos | Free |
+| `auto_listings` | Search listings with filters | Free |
 | `auto_specs` | Vehicle specifications | Growth |
 | `auto_build` | OEM build data | Growth |
 | `auto_recalls` | Safety recalls | Growth |
@@ -233,9 +233,9 @@ All methods return:
 
 | Method | Tier | Description |
 |--------|------|-------------|
-| `decode(vin)` | Starter | Decode VIN — make, model, year, trim |
-| `photos(vin)` | Starter | Vehicle photos |
-| `listings(filters?)` | Starter | Search listings with filters |
+| `decode(vin)` | Free | Decode VIN — make, model, year, trim |
+| `photos(vin)` | Free | Vehicle photos |
+| `listings(filters?)` | Free | Search listings with filters |
 | `specs(vin)` | Growth | Detailed vehicle specifications |
 | `build(vin)` | Growth | OEM build and trim data |
 | `recalls(vin)` | Growth | Safety recalls |
@@ -259,11 +259,13 @@ import { AutoDevClient } from '@auto.dev/sdk/core'    // low-level client
 
 | Plan | Monthly | Endpoints |
 |------|---------|-----------|
-| **Starter** | Free + data fees | Decode, Listings, Photos |
+| **Free** | $0, no card | Decode, Listings, Photos |
 | **Growth** | $299/mo + data fees | + Specs, Build, Recalls, Payments, APR, TCO |
 | **Scale** | $599/mo + data fees | + Open Recalls, Plate-to-VIN, Taxes & Fees |
 
-The Starter plan includes 1,000 free API calls/month; Growth and Scale bill all API calls. See [auto.dev/pricing](https://auto.dev/pricing) for per-call data costs.
+Free includes 1,000 API calls/month as a hard cap — requests stop at the limit and there are no
+data fees. Growth and Scale bill all API calls. See [auto.dev/pricing](https://auto.dev/pricing)
+for per-call data costs.
 
 ## Documentation
 
