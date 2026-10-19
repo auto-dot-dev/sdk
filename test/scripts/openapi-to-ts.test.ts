@@ -113,4 +113,20 @@ describe('renderSpec', () => {
     expect(out).not.toContain('BuildVinParams')
     expect(out).toContain('// GET /build/{vin}\n// GET /listings\n')
   })
+
+  it('renders `not: {}` as never so an anyOf keeps its other arms, and wraps multiline descriptions as JSDoc lines', () => {
+    const out = renderSpec(
+      spec({
+        Row: {
+          type: 'object',
+          description: 'One row.\n\nKeys are column names.',
+          additionalProperties: { anyOf: [{ type: 'string' }, { type: 'number' }, { not: {} }] },
+        },
+      }),
+    )
+
+    expect(out).toContain(
+      '/**\n * One row.\n *\n * Keys are column names.\n */\nexport type Row = Record<string, string | number | never>',
+    )
+  })
 })

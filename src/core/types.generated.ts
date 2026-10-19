@@ -923,7 +923,7 @@ export type Query = Record<string, string>
 export interface QueryEngineResponse {
   /** The listings. On /listings/{vin} for a vehicle with no current listing, its most recent stored listing, with `removedAt` after `createdAt`: last seen listed, when a source last listed it, in UTC ("YYYY-MM-DD HH:MM:SS", as `createdAt`); it left the market within 48 hours after. */
   data: Row[]
-  facets?: Record<string, Record<string, string> | unknown>
+  facets?: Record<string, Record<string, string> | never>
   links: {
     first?: string
     home?: string
@@ -1005,10 +1005,12 @@ export interface RecallsResponse {
 
 export type RoadsideAssistance = boolean | string
 
-/** Represents a single row in Clickhouse.
-
-This is a generic type, and can be used to represent any row in any table. */
-export type Row = Record<string, string | number | boolean | unknown>
+/**
+ * Represents a single row in Clickhouse.
+ *
+ * This is a generic type, and can be used to represent any row in any table.
+ */
+export type Row = Record<string, string | number | boolean | Record<string, unknown>>
 
 export type SellerType = string
 

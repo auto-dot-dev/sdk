@@ -32,6 +32,7 @@ export type JsonSchema = {
   const?: unknown
   anyOf?: JsonSchema[]
   oneOf?: JsonSchema[]
+  not?: JsonSchema
   description?: string
 }
 
@@ -91,11 +92,14 @@ export function renderParams(path: string, method: string, operation: OpenApiOpe
 
 export function schemaToTs(schema: JsonSchema, indent: string): string {
   if (schema.$ref) return refName(schema.$ref)
+  if (schema.not) return 'never'
   if (schema.const !== undefined) return literal(schema.const)
   if (schema.enum) return schema.enum.map(literal).join(' | ')
   const variants = schema.anyOf ?? schema.oneOf
   if (variants) return variants.map((v) => schemaToTs(v, indent)).join(' | ')
   if (Array.isArray(schema.type)) return schema.type.map(scalarToTs).join(' | ')
+  if (schema.type === 'object' && !schema.properties && typeof schema.additionalProperties !== 'object')
+    return 'Record<string, unknown>'
   if (schema.properties) return renderObjectBody(schema, indent)
   if (typeof schema.additionalProperties === 'object') {
     return `Record<string, ${schemaToTs(schema.additionalProperties, indent)}>`
@@ -124,8 +128,13 @@ function arrayItemToTs(items: JsonSchema | undefined, indent: string): string {
   return inner.includes(' ') ? `(${inner})` : inner
 }
 
-const jsDoc = (description: string | undefined, indent: string): string =>
-  description ? `${indent}/** ${description.replace(/\*\//g, '* /')} */\n` : ''
+/** One-line descriptions stay `/** … *\/`; multiline ones get the ` * ` prefix per line. */
+function jsDoc(description: string | undefined, indent: string): string {
+  if (!description) return ''
+  const lines = description.replace(/\*\//g, '* /').split('\n')
+  if (lines.length === 1) return `${indent}/** ${lines[0]} */\n`
+  return `${indent}/**\n${lines.map((l) => `${indent} *${l ? ' ' + l : ''}`).join('\n')}\n${indent} */\n`
+}
 
 const propertyKey = (key: string): string => (/^[A-Za-z_$][\w$]*$/.test(key) ? key : literal(key))
 
@@ -133,7 +142,7 @@ const propertyKey = (key: string): string => (/^[A-Za-z_$][\w$]*$/.test(key) ? k
 const literal = (value: unknown): string =>
   typeof value === 'string' ? `'${value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'` : JSON.stringify(value)
 
-function scalarToTs(type: string | string[] | undefined): string {
+function scalarToTs(type: string | undefined): string {
   switch (type) {
     case 'integer':
     case 'number':

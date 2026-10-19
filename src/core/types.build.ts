@@ -19,26 +19,31 @@ export interface MissingField {
   reason: 'no_vin_record' | 'not_yet_available'
 }
 
-/** Why there is no build for a VIN. Only `not_yet_available` is worth asking about again. */
-export type BuildMissReason =
-  | 'no_build_record'
-  | 'not_yet_available'
-  | 'invalid_vin'
-  | 'market_not_covered'
-  | 'class_not_covered'
+/** Why a 207 has no build (an invalid VIN is a 404, never a 207). Only `not_yet_available` is worth asking about again. */
+export type BuildMissReason = 'no_build_record' | 'not_yet_available' | 'market_not_covered' | 'class_not_covered'
 
 /**
  * The 207 Multi-Status partial answer: a car we can name but no record builds. Not an error, not billed.
  * Most HTTP clients treat a 207 as ok, so branch on `build === null` (see `isPartialBuild`) before reading `build`.
  */
 export interface BuildPartialResponse {
-  /** What a decoder said about this VIN. `msrp` only when the catalog lists one style. */
-  vehicle: { vin: string; year: number; make: string; model: string; trim?: string; body?: string; msrp?: number }
+  vehicle: BuildVehicle
   build: null
   /** What the matched style ships with; null when no style is known or the miss is coverage. */
   catalog: BuildCatalog | null
   reason: BuildMissReason
   retryable: boolean
+}
+
+/** What a decoder said about the VIN on a 207. `msrp` only when the catalog lists one style. */
+export interface BuildVehicle {
+  vin: string
+  year: number
+  make: string
+  model: string
+  trim?: string
+  body?: string
+  msrp?: number
 }
 
 /** The style-level catalog on a 207: not VIN-specific, never a fabricated build. */

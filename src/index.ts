@@ -10,6 +10,7 @@ export type {
   BuildPartialResponse,
   BuildResponse,
   BuildResult,
+  BuildVehicle,
   MissingField,
 } from './core/types.build'
 export { isPartialBuild } from './core/types.build'

@@ -40,7 +40,9 @@ async function main() {
   writeFileSync(OUTPUT_PATH, output, 'utf-8')
 
   const schemaCount = Object.keys(spec.components?.schemas ?? {}).length
-  const paramCount = (output.match(/^export interface \w+Params /gm) ?? []).length
+  const paramCount = Object.values(spec.paths)
+    .flatMap((methods) => Object.values(methods))
+    .filter((op) => op.parameters?.some((p) => p.in === 'query')).length
   console.log(`Generated ${OUTPUT_PATH}`)
   console.log(
     `Found ${schemaCount} response schemas, ${paramCount} param interfaces, and ${Object.keys(spec.paths).length} paths`,
