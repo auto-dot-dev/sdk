@@ -1,5 +1,14 @@
 import { describe, it, expect, vi } from 'vitest'
-import { authorizeDevice, pollForTokens, saveTokenData, saveApiKey, loadToken, clearCredentials, getValidToken, createStorage } from '../../src/auth/oauth'
+import {
+  authorizeDevice,
+  pollForTokens,
+  saveTokenData,
+  saveApiKey,
+  loadToken,
+  clearCredentials,
+  getValidToken,
+  createStorage,
+} from '../../src/auth/oauth'
 
 describe('OAuth module re-exports', () => {
   it('exports authorizeDevice from id.org.ai', () => {

@@ -27,7 +27,12 @@ export class AutoDevClient {
 
   constructor(options?: AutoDevClientOptions) {
     const apiKey = options?.apiKey ?? process.env.AUTODEV_API_KEY
-    if (!apiKey) throw new AutoDevError(401, 'UNAUTHORIZED', 'No API key provided. Pass apiKey in options or set AUTODEV_API_KEY env variable.')
+    if (!apiKey)
+      throw new AutoDevError(
+        401,
+        'UNAUTHORIZED',
+        'No API key provided. Pass apiKey in options or set AUTODEV_API_KEY env variable.',
+      )
     this.apiKeyOrResolver = apiKey
     this.org = options?.org
     this.baseUrl = options?.baseUrl ?? 'https://api.auto.dev'
@@ -64,9 +69,7 @@ export class AutoDevClient {
       // Most endpoints return { error: string }; the auth middleware returns { error: { message } }
       const errorBody = body as { error?: string | { message?: string }; suggestion?: string; upgradeLink?: string }
       const message =
-        typeof errorBody.error === 'string'
-          ? errorBody.error
-          : (errorBody.error?.message ?? response.statusText)
+        typeof errorBody.error === 'string' ? errorBody.error : (errorBody.error?.message ?? response.statusText)
       const code = this.statusToCode(response.status)
       const suggestion = this.getSuggestion(response.status, definition.tier, errorBody.upgradeLink)
       throw new AutoDevError(response.status, code, message, suggestion)
@@ -79,7 +82,7 @@ export class AutoDevClient {
       consumer: this.raw,
       config: config.raw,
     })
-    const data = isRaw ? rawData : stripMetadata(rawData as Record<string, unknown>) as T
+    const data = isRaw ? rawData : (stripMetadata(rawData as Record<string, unknown>) as T)
 
     return {
       data,

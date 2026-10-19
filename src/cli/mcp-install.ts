@@ -51,7 +51,17 @@ const MCP_CLIENTS: McpClient[] = [
   },
   {
     name: 'Cline',
-    configPath: join(homedir(), 'Library', 'Application Support', 'Code', 'User', 'globalStorage', 'saoudrizwan.claude-dev', 'settings', 'cline_mcp_settings.json'),
+    configPath: join(
+      homedir(),
+      'Library',
+      'Application Support',
+      'Code',
+      'User',
+      'globalStorage',
+      'saoudrizwan.claude-dev',
+      'settings',
+      'cline_mcp_settings.json',
+    ),
     key: 'mcpServers',
     serverConfig: { ...BASE_SERVER_CONFIG },
   },

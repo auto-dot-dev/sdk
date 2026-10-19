@@ -19,36 +19,40 @@ const POSITIONAL_PARAMS = new Set(['vin', 'state', 'plate'])
 
 export function registerApiTool(server: McpServer, client: AutoDevClient, def: McpToolDef): void {
   const name = def.name ?? `auto_${def.endpoint}`
-  const definition = (ENDPOINTS as Record<string, typeof ENDPOINTS[keyof typeof ENDPOINTS] | undefined>)[def.endpoint]
+  const definition = (ENDPOINTS as Record<string, (typeof ENDPOINTS)[keyof typeof ENDPOINTS] | undefined>)[def.endpoint]
   if (!definition) {
     throw new Error(`Unknown endpoint: ${def.endpoint}`)
   }
 
-  server.registerTool(name, {
-    description: definition.description,
-    inputSchema: def.params,
-  }, async (args) => {
-    try {
-      const positional: Record<string, string> = {}
-      const query: Record<string, string> = {}
+  server.registerTool(
+    name,
+    {
+      description: definition.description,
+      inputSchema: def.params,
+    },
+    async (args) => {
+      try {
+        const positional: Record<string, string> = {}
+        const query: Record<string, string> = {}
 
-      for (const [key, val] of Object.entries(args as Record<string, string | undefined>)) {
-        if (val === undefined) continue
-        if (POSITIONAL_PARAMS.has(key)) {
-          positional[key] = val
-        } else if (def.queryMap?.[key]) {
-          query[def.queryMap[key]] = val
-        } else {
-          query[key] = val
+        for (const [key, val] of Object.entries(args as Record<string, string | undefined>)) {
+          if (val === undefined) continue
+          if (POSITIONAL_PARAMS.has(key)) {
+            positional[key] = val
+          } else if (def.queryMap?.[key]) {
+            query[def.queryMap[key]] = val
+          } else {
+            query[key] = val
+          }
         }
-      }
 
-      const { data } = await client.request(def.endpoint, { ...positional, query })
-      return { content: [{ type: 'text' as const, text: JSON.stringify(data) }] }
-    } catch (err) {
-      return handleError(err, def.endpoint)
-    }
-  })
+        const { data } = await client.request(def.endpoint, { ...positional, query })
+        return { content: [{ type: 'text' as const, text: JSON.stringify(data) }] }
+      } catch (err) {
+        return handleError(err, def.endpoint)
+      }
+    },
+  )
 }
 
 export function registerApiTools(server: McpServer, client: AutoDevClient, defs: McpToolDef[]): void {
@@ -104,7 +108,11 @@ export function handleError(err: unknown, endpoint?: string): McpErrorResult {
     return { content: [{ type: 'text', text: msg }] }
   }
   if (err instanceof AutoDevError) {
-    return { content: [{ type: 'text', text: `Error ${err.status}: ${err.message}${err.suggestion ? `\n\n${err.suggestion}` : ''}` }] }
+    return {
+      content: [
+        { type: 'text', text: `Error ${err.status}: ${err.message}${err.suggestion ? `\n\n${err.suggestion}` : ''}` },
+      ],
+    }
   }
   return { content: [{ type: 'text', text: `Error: ${(err as Error).message}` }] }
 }

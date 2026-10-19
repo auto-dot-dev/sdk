@@ -10,26 +10,26 @@ function colorsEnabled(): boolean {
 }
 
 function ansi(code: string) {
-  return (text: string) => colorsEnabled() ? `${code}${text}\x1b[0m` : text
+  return (text: string) => (colorsEnabled() ? `${code}${text}\x1b[0m` : text)
 }
 
 // Core palette — matches auto.dev website
-export const purple = ansi('\x1b[35m')        // brand accent
-export const boldPurple = ansi('\x1b[1;35m')  // headers, command names
-export const cyan = ansi('\x1b[36m')          // values, data
-export const boldCyan = ansi('\x1b[1;36m')    // important values
-export const dim = ansi('\x1b[2m')            // secondary info
-export const bold = ansi('\x1b[1m')           // emphasis
-export const green = ansi('\x1b[32m')         // success
-export const boldGreen = ansi('\x1b[1;32m')   // success headers
-export const limeGreen = ansi('\x1b[33m')       // links/URLs
-export const brown = ansi('\x1b[38;5;180m')    // string values
-export const yellowNum = ansi('\x1b[92m')      // numbers and booleans (bright green)
-export const red = ansi('\x1b[31m')           // errors
-export const boldRed = ansi('\x1b[1;31m')     // error headers
-export const yellow = ansi('\x1b[33m')        // warnings
-export const white = ansi('\x1b[37m')         // neutral
-export const boldWhite = ansi('\x1b[1;37m')   // labels
+export const purple = ansi('\x1b[35m') // brand accent
+export const boldPurple = ansi('\x1b[1;35m') // headers, command names
+export const cyan = ansi('\x1b[36m') // values, data
+export const boldCyan = ansi('\x1b[1;36m') // important values
+export const dim = ansi('\x1b[2m') // secondary info
+export const bold = ansi('\x1b[1m') // emphasis
+export const green = ansi('\x1b[32m') // success
+export const boldGreen = ansi('\x1b[1;32m') // success headers
+export const limeGreen = ansi('\x1b[33m') // links/URLs
+export const brown = ansi('\x1b[38;5;180m') // string values
+export const yellowNum = ansi('\x1b[92m') // numbers and booleans (bright green)
+export const red = ansi('\x1b[31m') // errors
+export const boldRed = ansi('\x1b[1;31m') // error headers
+export const yellow = ansi('\x1b[33m') // warnings
+export const white = ansi('\x1b[37m') // neutral
+export const boldWhite = ansi('\x1b[1;37m') // labels
 
 // Semantic aliases
 export const brand = boldPurple
