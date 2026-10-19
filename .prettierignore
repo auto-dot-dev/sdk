@@ -1,0 +1,5 @@
+dist/
+docs/
+plans/
+pnpm-lock.yaml
+src/docs/data.ts

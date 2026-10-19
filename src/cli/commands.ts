@@ -2,6 +2,7 @@ import type { Command } from 'commander'
 import { ENDPOINTS } from '../core/endpoints'
 import { type CommandDef, makeCommand } from './factory'
 
+// prettier-ignore
 const commands: CommandDef[] = [
   // Simple VIN commands
   { name: 'decode',       description: 'Decode a VIN — returns make, model, year, trim, engine, drivetrain' },
