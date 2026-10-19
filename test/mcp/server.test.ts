@@ -34,6 +34,12 @@ describe('MCP Server', () => {
     expect(names).toContain('auto_taxes')
   })
 
+  it('auto_build description tells the model about the 207 partial answer', () => {
+    const build = TOOL_DEFINITIONS.find((t) => t.name === 'auto_build')!
+    expect(build.description).toMatch(/207/)
+    expect(build.description).toMatch(/build.*null/i)
+  })
+
   it('auto_docs tool requires query param', () => {
     const docs = TOOL_DEFINITIONS.find((t) => t.name === 'auto_docs')!
     expect(docs).toBeDefined()

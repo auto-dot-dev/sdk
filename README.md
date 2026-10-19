@@ -237,7 +237,7 @@ All methods return:
 | `photos(vin)` | Free | Vehicle photos |
 | `listings(filters?)` | Free | Search listings with filters |
 | `specs(vin)` | Growth | Detailed vehicle specifications |
-| `build(vin)` | Growth | OEM build and trim data |
+| `build(vin)` | Growth | OEM build and trim data; a 207 partial answer (`build: null`, `vehicle`, `catalog`, `reason`) when no record builds the VIN, see `isPartialBuild` |
 | `recalls(vin)` | Growth | Safety recalls |
 | `payments(vin, opts?)` | Growth | Monthly payment calculations |
 | `apr(vin, opts?)` | Growth | Interest rates by credit profile |

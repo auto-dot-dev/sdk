@@ -33,7 +33,7 @@
     "test:watch": "vitest",
     "build:docs": "tsx scripts/build-docs.ts",
     "build:docs-data": "tsx scripts/build-docs-data.ts",
-    "generate": "tsx scripts/generate.ts",
+    "generate": "tsx scripts/generate.ts && prettier --write src/core/types.generated.ts",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

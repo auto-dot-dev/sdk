@@ -1,5 +1,19 @@
 export { AutoDevClient } from './core/client'
 export type { AprOptions, AutoDevClientOptions, AutoDevResponse, ListingsFilters, PaymentOptions, TaxOptions, TcoOptions } from './core/types'
+export type {
+  Build,
+  BuildCatalog,
+  BuildCatalogColor,
+  BuildCatalogOption,
+  BuildCatalogStyle,
+  BuildMissReason,
+  BuildPartialResponse,
+  BuildResponse,
+  BuildResult,
+  BuildVehicle,
+  MissingField,
+} from './core/types.build'
+export { isPartialBuild } from './core/types.build'
 export type { AutoDevErrorCode } from './errors'
 export { AutoDevError } from './errors'
 export { AutoDev } from './sdk/index'

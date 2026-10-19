@@ -56,6 +56,29 @@ describe('AutoDevClient', () => {
     fetchSpy.mockRestore()
   })
 
+  it('passes a 207 partial build through as data instead of throwing', async () => {
+    const partial = {
+      vehicle: { vin: '1HGCM82633A004352', year: 2003, make: 'Honda', model: 'Accord' },
+      build: null,
+      catalog: null,
+      reason: 'no_build_record',
+      retryable: false,
+    }
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify(partial), {
+        status: 207,
+        headers: { 'content-type': 'application/json', 'x-request-id': 'req_207' },
+      }),
+    )
+
+    const result = await client.request('build', { vin: '1HGCM82633A004352' })
+
+    expect(result.data).toEqual(partial)
+    expect(result.meta.requestId).toBe('req_207')
+
+    fetchSpy.mockRestore()
+  })
+
   it('includes org header when configured', async () => {
     const orgClient = new AutoDevClient({ apiKey: 'ad_sk_test123', org: 'acme' })
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(

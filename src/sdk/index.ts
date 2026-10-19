@@ -1,5 +1,6 @@
 import { AutoDevClient } from '../core/client'
 import type { AprOptions, AutoDevClientOptions, AutoDevResponse, ListingsFilters, PaymentOptions, TaxOptions, TcoOptions } from '../core/types'
+import type { BuildResult } from '../core/types.build'
 
 export class AutoDev {
   private readonly client: AutoDevClient
@@ -27,8 +28,9 @@ export class AutoDev {
     return this.client.request('specs', { vin })
   }
 
-  async build(vin: string): Promise<AutoDevResponse<unknown>> {
-    return this.client.request('build', { vin })
+  /** The 200 build or, when no record builds the VIN, the 207 partial answer; see `isPartialBuild`. */
+  async build(vin: string): Promise<AutoDevResponse<BuildResult>> {
+    return this.client.request<BuildResult>('build', { vin })
   }
 
   async recalls(vin: string): Promise<AutoDevResponse<unknown>> {
