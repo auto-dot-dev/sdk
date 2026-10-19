@@ -1,6 +1,12 @@
 import { describe, it, expect, vi } from 'vitest'
 import { z } from 'zod'
-import { handleError, registerApiTool, registerApiTools, toToolDefinitions, type McpToolDef } from '../../src/mcp/factory'
+import {
+  handleError,
+  registerApiTool,
+  registerApiTools,
+  toToolDefinitions,
+  type McpToolDef,
+} from '../../src/mcp/factory'
 import { AutoDevError } from '../../src/errors'
 
 // Minimal mock for McpServer
@@ -23,7 +29,12 @@ function createMockClient(response: unknown = { data: { result: 'ok' } }) {
 
 describe('handleError', () => {
   it('formats PLAN_REQUIRED error with upgrade link', () => {
-    const err = new AutoDevError(402, 'PLAN_REQUIRED', 'Upgrade required', 'This endpoint requires a Growth plan. Upgrade at https://auto.dev/pricing')
+    const err = new AutoDevError(
+      402,
+      'PLAN_REQUIRED',
+      'Upgrade required',
+      'This endpoint requires a Growth plan. Upgrade at https://auto.dev/pricing',
+    )
     const result = handleError(err, 'specs')
     expect(result.content[0].text).toContain('requires a Growth plan')
     expect(result.content[0].text).toContain('https://auto.dev/pricing')
@@ -53,7 +64,9 @@ describe('registerApiTool', () => {
 
     expect(server.tools).toHaveLength(1)
     expect(server.tools[0].name).toBe('auto_decode')
-    expect(server.tools[0].config.description).toBe('Decode a VIN — returns make, model, year, trim, engine, drivetrain')
+    expect(server.tools[0].config.description).toBe(
+      'Decode a VIN — returns make, model, year, trim, engine, drivetrain',
+    )
   })
 
   it('handler calls client.request with positional vin param', async () => {
@@ -138,16 +151,22 @@ describe('toToolDefinitions', () => {
     expect(result[0].name).toBe('auto_decode')
     expect(result[0].description).toBe('Decode a VIN — returns make, model, year, trim, engine, drivetrain')
     expect(result[0].inputSchema.type).toBe('object')
-    expect(result[0].inputSchema.properties.vin).toEqual({ type: 'string', description: 'Vehicle Identification Number' })
+    expect(result[0].inputSchema.properties.vin).toEqual({
+      type: 'string',
+      description: 'Vehicle Identification Number',
+    })
     expect(result[0].inputSchema.required).toContain('vin')
   })
 
   it('marks optional params as not required', () => {
     const defs: McpToolDef[] = [
-      { endpoint: 'tco', params: {
-        vin: z.string().describe('VIN'),
-        zip: z.string().optional().describe('ZIP code'),
-      }},
+      {
+        endpoint: 'tco',
+        params: {
+          vin: z.string().describe('VIN'),
+          zip: z.string().optional().describe('ZIP code'),
+        },
+      },
     ]
     const result = toToolDefinitions(defs)
 
@@ -158,9 +177,12 @@ describe('toToolDefinitions', () => {
 
   it('handles tool with no required params', () => {
     const defs: McpToolDef[] = [
-      { endpoint: 'listings', params: {
-        make: z.string().optional().describe('Make'),
-      }},
+      {
+        endpoint: 'listings',
+        params: {
+          make: z.string().optional().describe('Make'),
+        },
+      },
     ]
     const result = toToolDefinitions(defs)
 

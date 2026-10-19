@@ -1,4 +1,10 @@
-export type AutoDevErrorCode = 'UNAUTHORIZED' | 'PLAN_REQUIRED' | 'RATE_LIMITED' | 'NOT_FOUND' | 'INVALID_REQUEST' | 'SERVER_ERROR'
+export type AutoDevErrorCode =
+  | 'UNAUTHORIZED'
+  | 'PLAN_REQUIRED'
+  | 'RATE_LIMITED'
+  | 'NOT_FOUND'
+  | 'INVALID_REQUEST'
+  | 'SERVER_ERROR'
 
 export class AutoDevError extends Error {
   readonly status: number

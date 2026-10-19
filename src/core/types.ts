@@ -18,4 +18,12 @@ export interface AutoDevClientOptions {
 }
 
 // Re-export generated param types under SDK-friendly names
-export type { AprVinParams as AprOptions, ListingsVinParams as ListingsFilters, PaymentsVinParams as PaymentOptions, RecallsVinParams as RecallsOptions, TaxesVinParams as TaxOptions, TcoVinParams as TcoOptions, TransportVinParams as TransportOptions } from './types.generated'
+export type {
+  AprVinParams as AprOptions,
+  ListingsVinParams as ListingsFilters,
+  PaymentsVinParams as PaymentOptions,
+  RecallsVinParams as RecallsOptions,
+  TaxesVinParams as TaxOptions,
+  TcoVinParams as TcoOptions,
+  TransportVinParams as TransportOptions,
+} from './types.generated'

@@ -34,9 +34,7 @@ describe('formatOutput', () => {
   })
 
   it('returns colorized JSON for array with nested objects', () => {
-    const data = [
-      { vin: '123', vehicle: { make: 'Toyota', model: 'Camry' } },
-    ]
+    const data = [{ vin: '123', vehicle: { make: 'Toyota', model: 'Camry' } }]
     const result = formatOutput(data, 'table')
     // Should NOT contain [object Object]
     expect(result).not.toContain('[object Object]')
@@ -53,9 +51,7 @@ describe('formatOutput', () => {
   })
 
   it('treats null values in array as flat (not nested)', () => {
-    const data = [
-      { vin: '123', history: null },
-    ]
+    const data = [{ vin: '123', history: null }]
     const result = formatOutput(data, 'table')
     // null is not a nested object, so should be table format
     expect(result).toContain('vin')

@@ -2,7 +2,14 @@ import { exec } from 'node:child_process'
 import { platform } from 'node:os'
 import { Command } from 'commander'
 import { DEFAULT_AUTH_CONFIG } from '../auth/config'
-import { authorizeDevice, clearCredentials, getValidToken, pollForTokens, saveApiKey, saveTokenData } from '../auth/oauth'
+import {
+  authorizeDevice,
+  clearCredentials,
+  getValidToken,
+  pollForTokens,
+  saveApiKey,
+  saveTokenData,
+} from '../auth/oauth'
 import { buildAuthHeaders } from '../core/user-agent'
 import { brand, formatError, formatSuccess, header, hint, kv, value } from './colors'
 import { createSpinner } from './spinner'
@@ -30,7 +37,8 @@ export function buildLoginCommand(): Command {
         const deviceCode = await authorizeDevice(DEFAULT_AUTH_CONFIG.clientId, CLI_HEADERS)
         deviceSpinner.stop()
 
-        const verifyUrl = deviceCode.verification_uri_complete || `${deviceCode.verification_uri}?user_code=${deviceCode.user_code}`
+        const verifyUrl =
+          deviceCode.verification_uri_complete || `${deviceCode.verification_uri}?user_code=${deviceCode.user_code}`
         console.log(`\n${brand('auto.dev')} ${hint('authentication')}`)
         console.log(`\nOpening browser to: ${value(verifyUrl)}`)
         console.log(`If it doesn't open, visit: ${value(deviceCode.verification_uri)}`)
@@ -38,7 +46,13 @@ export function buildLoginCommand(): Command {
         openBrowser(verifyUrl)
         console.log(hint('Waiting for authorization...'))
 
-        const token = await pollForTokens(DEFAULT_AUTH_CONFIG.clientId, deviceCode.device_code, deviceCode.interval, deviceCode.expires_in, CLI_HEADERS)
+        const token = await pollForTokens(
+          DEFAULT_AUTH_CONFIG.clientId,
+          deviceCode.device_code,
+          deviceCode.interval,
+          deviceCode.expires_in,
+          CLI_HEADERS,
+        )
 
         await saveTokenData(token)
         console.log(formatSuccess('Login successful!'))
@@ -52,41 +66,37 @@ export function buildLoginCommand(): Command {
 }
 
 export function buildLogoutCommand(): Command {
-  const cmd = new Command('logout')
-    .description('Log out and clear stored credentials')
-    .action(async () => {
-      await clearCredentials('cli')
-      console.log(formatSuccess('Logged out. Credentials cleared.'))
-    })
+  const cmd = new Command('logout').description('Log out and clear stored credentials').action(async () => {
+    await clearCredentials('cli')
+    console.log(formatSuccess('Logged out. Credentials cleared.'))
+  })
 
   return cmd
 }
 
 export function buildWhoamiCommand(): Command {
-  const cmd = new Command('whoami')
-    .description('Show current user and active org')
-    .action(async () => {
-      const token = await getValidToken('cli')
-      if (!token) {
-        console.log(formatError('Not logged in', 'Run: auto login'))
-        return
-      }
-      const { getUser } = await import('../auth/oauth')
-      const whoamiSpinner = createSpinner()
-      const { user } = await getUser(token, CLI_HEADERS)
-      whoamiSpinner.stop()
-      if (user) {
-        console.log(`\n${header('auto.dev')}`)
-        console.log()
-        console.log(kv('Email', user.email ?? 'unknown', 2))
-        console.log(kv('Name ', user.name ?? 'unknown', 2))
-        console.log(kv('ID   ', user.id, 2))
-        if (user.organizationId) console.log(kv('Org  ', user.organizationId, 2))
-        console.log()
-      } else {
-        console.log(hint('Authenticated (could not fetch user info)'))
-      }
-    })
+  const cmd = new Command('whoami').description('Show current user and active org').action(async () => {
+    const token = await getValidToken('cli')
+    if (!token) {
+      console.log(formatError('Not logged in', 'Run: auto login'))
+      return
+    }
+    const { getUser } = await import('../auth/oauth')
+    const whoamiSpinner = createSpinner()
+    const { user } = await getUser(token, CLI_HEADERS)
+    whoamiSpinner.stop()
+    if (user) {
+      console.log(`\n${header('auto.dev')}`)
+      console.log()
+      console.log(kv('Email', user.email ?? 'unknown', 2))
+      console.log(kv('Name ', user.name ?? 'unknown', 2))
+      console.log(kv('ID   ', user.id, 2))
+      if (user.organizationId) console.log(kv('Org  ', user.organizationId, 2))
+      console.log()
+    } else {
+      console.log(hint('Authenticated (could not fetch user info)'))
+    }
+  })
 
   return cmd
 }

@@ -1,5 +1,13 @@
 import { AutoDevClient } from '../core/client'
-import type { AprOptions, AutoDevClientOptions, AutoDevResponse, ListingsFilters, PaymentOptions, TaxOptions, TcoOptions } from '../core/types'
+import type {
+  AprOptions,
+  AutoDevClientOptions,
+  AutoDevResponse,
+  ListingsFilters,
+  PaymentOptions,
+  TaxOptions,
+  TcoOptions,
+} from '../core/types'
 import type { BuildResult } from '../core/types.build'
 
 export class AutoDev {
@@ -18,9 +26,7 @@ export class AutoDev {
   }
 
   async listings(filters?: ListingsFilters): Promise<AutoDevResponse<unknown>> {
-    const query = filters
-      ? Object.fromEntries(Object.entries(filters).map(([k, v]) => [k, String(v)]))
-      : undefined
+    const query = filters ? Object.fromEntries(Object.entries(filters).map(([k, v]) => [k, String(v)])) : undefined
     return this.client.request('listings', { query })
   }
 
@@ -38,23 +44,17 @@ export class AutoDev {
   }
 
   async payments(vin: string, options?: PaymentOptions): Promise<AutoDevResponse<unknown>> {
-    const query = options
-      ? Object.fromEntries(Object.entries(options).map(([k, v]) => [k, String(v)]))
-      : undefined
+    const query = options ? Object.fromEntries(Object.entries(options).map(([k, v]) => [k, String(v)])) : undefined
     return this.client.request('payments', { vin, query })
   }
 
   async apr(vin: string, options?: AprOptions): Promise<AutoDevResponse<unknown>> {
-    const query = options
-      ? Object.fromEntries(Object.entries(options).map(([k, v]) => [k, String(v)]))
-      : undefined
+    const query = options ? Object.fromEntries(Object.entries(options).map(([k, v]) => [k, String(v)])) : undefined
     return this.client.request('apr', { vin, query })
   }
 
   async tco(vin: string, options?: TcoOptions): Promise<AutoDevResponse<unknown>> {
-    const query = options
-      ? Object.fromEntries(Object.entries(options).map(([k, v]) => [k, String(v)]))
-      : undefined
+    const query = options ? Object.fromEntries(Object.entries(options).map(([k, v]) => [k, String(v)])) : undefined
     return this.client.request('tco', { vin, query })
   }
 
@@ -67,9 +67,7 @@ export class AutoDev {
   }
 
   async taxes(vin: string, options?: TaxOptions): Promise<AutoDevResponse<unknown>> {
-    const query = options
-      ? Object.fromEntries(Object.entries(options).map(([k, v]) => [k, String(v)]))
-      : undefined
+    const query = options ? Object.fromEntries(Object.entries(options).map(([k, v]) => [k, String(v)])) : undefined
     return this.client.request('taxes', { vin, query })
   }
 

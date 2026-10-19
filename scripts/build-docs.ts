@@ -138,7 +138,10 @@ function convertMdxToMarkdown(content: string): string {
   // Single line version
   md = md.replace(/<ClickableCodeBlock\s+code='([^']+)'\s+href='[^']+'\s+lang='([^']+)'\s*\/>/g, '\n```$2\n$1\n```\n')
   // Multi-line version
-  md = md.replace(/<ClickableCodeBlock\s*\n\s*code='([^']+)'\s*\n\s*href='[^']+'\s*\n\s*lang='([^']+)'\s*\n\s*\/>/g, '\n```$2\n$1\n```\n')
+  md = md.replace(
+    /<ClickableCodeBlock\s*\n\s*code='([^']+)'\s*\n\s*href='[^']+'\s*\n\s*lang='([^']+)'\s*\n\s*\/>/g,
+    '\n```$2\n$1\n```\n',
+  )
 
   // Remove any remaining JSX self-closing tags
   md = md.replace(/<[A-Z]\w+[^>]*\/>/g, '')

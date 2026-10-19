@@ -68,10 +68,10 @@ Settings are stored in `~/.auto-dev/config.json`.
 
 Auto.dev exposes its full vehicle data API as native [Model Context Protocol](https://modelcontextprotocol.io) tools. Two paths — pick one:
 
-| Path | Best for | Install |
-|------|----------|---------|
-| **Remote** — `https://mcp.auto.dev/mcp` | Hosted clients (Claude Desktop, ChatGPT), zero setup | None — just add the URL |
-| **Local stdio** — this SDK | CLI users, low-latency, offline-friendly | `npm i -g @auto.dev/sdk` |
+| Path                                    | Best for                                             | Install                  |
+| --------------------------------------- | ---------------------------------------------------- | ------------------------ |
+| **Remote** — `https://mcp.auto.dev/mcp` | Hosted clients (Claude Desktop, ChatGPT), zero setup | None — just add the URL  |
+| **Local stdio** — this SDK              | CLI users, low-latency, offline-friendly             | `npm i -g @auto.dev/sdk` |
 
 Both expose the same tools. Remote authenticates via OAuth (one click). Stdio uses `auto login` or `AUTODEV_API_KEY`.
 
@@ -88,6 +88,7 @@ Auto-configures Claude Code, Claude Desktop, and Cursor with the stdio MCP serve
 #### Claude Code
 
 **Remote:**
+
 ```bash
 claude mcp add -s user -t http auto-dev https://mcp.auto.dev/mcp
 ```
@@ -95,6 +96,7 @@ claude mcp add -s user -t http auto-dev https://mcp.auto.dev/mcp
 Then run `/mcp` and select **Authenticate** for `auto-dev`.
 
 **Stdio:**
+
 ```bash
 npx @auto.dev/sdk mcp install
 ```
@@ -161,23 +163,23 @@ Requires VS Code 1.99+ with Copilot Agent mode.
 
 ### Available MCP Tools
 
-| Tool | Description | Plan |
-|------|-------------|------|
-| `auto_decode` | Decode a VIN | Free |
-| `auto_photos` | Vehicle photos | Free |
-| `auto_listings` | Search listings with filters | Free |
-| `auto_specs` | Vehicle specifications | Growth |
-| `auto_build` | OEM build data | Growth |
-| `auto_recalls` | Safety recalls | Growth |
-| `auto_payments` | Payment calculations | Growth |
-| `auto_apr` | Interest rates | Growth |
-| `auto_tco` | Total cost of ownership | Growth |
-| `auto_open_recalls` | Open/unresolved recalls | Scale |
-| `auto_plate` | License plate to VIN | Scale |
-| `auto_taxes` | Taxes and fees | Scale |
-| `auto_docs` | Search bundled API documentation | — |
-| `auto_config_set` | Set a config value (e.g. `raw: true`) | — |
-| `auto_config_get` | Get a config value or list all settings | — |
+| Tool                | Description                             | Plan   |
+| ------------------- | --------------------------------------- | ------ |
+| `auto_decode`       | Decode a VIN                            | Free   |
+| `auto_photos`       | Vehicle photos                          | Free   |
+| `auto_listings`     | Search listings with filters            | Free   |
+| `auto_specs`        | Vehicle specifications                  | Growth |
+| `auto_build`        | OEM build data                          | Growth |
+| `auto_recalls`      | Safety recalls                          | Growth |
+| `auto_payments`     | Payment calculations                    | Growth |
+| `auto_apr`          | Interest rates                          | Growth |
+| `auto_tco`          | Total cost of ownership                 | Growth |
+| `auto_open_recalls` | Open/unresolved recalls                 | Scale  |
+| `auto_plate`        | License plate to VIN                    | Scale  |
+| `auto_taxes`        | Taxes and fees                          | Scale  |
+| `auto_docs`         | Search bundled API documentation        | —      |
+| `auto_config_set`   | Set a config value (e.g. `raw: true`)   | —      |
+| `auto_config_get`   | Get a config value or list all settings | —      |
 
 ## SDK
 
@@ -231,37 +233,37 @@ All methods return:
 
 ### SDK Methods
 
-| Method | Tier | Description |
-|--------|------|-------------|
-| `decode(vin)` | Free | Decode VIN — make, model, year, trim |
-| `photos(vin)` | Free | Vehicle photos |
-| `listings(filters?)` | Free | Search listings with filters |
-| `specs(vin)` | Growth | Detailed vehicle specifications |
-| `build(vin)` | Growth | OEM build and trim data; a 207 partial answer (`build: null`, `vehicle`, `catalog`, `reason`) when no record builds the VIN, see `isPartialBuild` |
-| `recalls(vin)` | Growth | Safety recalls |
-| `payments(vin, opts?)` | Growth | Monthly payment calculations |
-| `apr(vin, opts?)` | Growth | Interest rates by credit profile |
-| `tco(vin, opts?)` | Growth | Total cost of ownership |
-| `openRecalls(vin)` | Scale | Open/unresolved recalls |
-| `plate(state, plate)` | Scale | License plate to VIN |
-| `taxes(vin, opts?)` | Scale | Taxes and fees |
-| `usage()` | — | Account usage statistics |
+| Method                 | Tier   | Description                                                                                                                                       |
+| ---------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `decode(vin)`          | Free   | Decode VIN — make, model, year, trim                                                                                                              |
+| `photos(vin)`          | Free   | Vehicle photos                                                                                                                                    |
+| `listings(filters?)`   | Free   | Search listings with filters                                                                                                                      |
+| `specs(vin)`           | Growth | Detailed vehicle specifications                                                                                                                   |
+| `build(vin)`           | Growth | OEM build and trim data; a 207 partial answer (`build: null`, `vehicle`, `catalog`, `reason`) when no record builds the VIN, see `isPartialBuild` |
+| `recalls(vin)`         | Growth | Safety recalls                                                                                                                                    |
+| `payments(vin, opts?)` | Growth | Monthly payment calculations                                                                                                                      |
+| `apr(vin, opts?)`      | Growth | Interest rates by credit profile                                                                                                                  |
+| `tco(vin, opts?)`      | Growth | Total cost of ownership                                                                                                                           |
+| `openRecalls(vin)`     | Scale  | Open/unresolved recalls                                                                                                                           |
+| `plate(state, plate)`  | Scale  | License plate to VIN                                                                                                                              |
+| `taxes(vin, opts?)`    | Scale  | Taxes and fees                                                                                                                                    |
+| `usage()`              | —      | Account usage statistics                                                                                                                          |
 
 ### Subpath Exports
 
 ```typescript
-import { AutoDev } from '@auto.dev/sdk'              // SDK client
-import { createMcpServer } from '@auto.dev/sdk/mcp'  // MCP server
-import { AutoDevClient } from '@auto.dev/sdk/core'    // low-level client
+import { AutoDev } from '@auto.dev/sdk' // SDK client
+import { createMcpServer } from '@auto.dev/sdk/mcp' // MCP server
+import { AutoDevClient } from '@auto.dev/sdk/core' // low-level client
 ```
 
 ## Plans & Pricing
 
-| Plan | Monthly | Endpoints |
-|------|---------|-----------|
-| **Free** | $0, no card | Decode, Listings, Photos |
+| Plan       | Monthly             | Endpoints                                   |
+| ---------- | ------------------- | ------------------------------------------- |
+| **Free**   | $0, no card         | Decode, Listings, Photos                    |
 | **Growth** | $299/mo + data fees | + Specs, Build, Recalls, Payments, APR, TCO |
-| **Scale** | $599/mo + data fees | + Open Recalls, Plate-to-VIN, Taxes & Fees |
+| **Scale**  | $599/mo + data fees | + Open Recalls, Plate-to-VIN, Taxes & Fees  |
 
 Free includes 1,000 API calls/month as a hard cap — requests stop at the limit and there are no
 data fees. Growth and Scale bill all API calls. See [auto.dev/pricing](https://auto.dev/pricing)

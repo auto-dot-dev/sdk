@@ -30,7 +30,6 @@ if (process.argv.includes('--mcp')) {
     })
   })()
 } else {
-
   program.addCommand(buildLoginCommand())
   program.addCommand(buildLogoutCommand())
   program.addCommand(buildWhoamiCommand())
@@ -39,14 +38,24 @@ if (process.argv.includes('--mcp')) {
   program.addCommand(buildConfigCommand())
 
   const orgs = new Command('orgs').description('Manage organizations')
-  orgs.command('list').description('List your organizations').action(() => {
-    console.log('Organization listing requires authentication. Run: auto login')
-  })
-  orgs.command('switch').argument('<slug>', 'Organization slug').description('Switch active organization').action(async (slug) => {
-    const token = await getValidToken('cli')
-    if (!token) { console.error('Not logged in. Run: auto login'); process.exit(1) }
-    console.log(`Switched to organization: ${slug}`)
-  })
+  orgs
+    .command('list')
+    .description('List your organizations')
+    .action(() => {
+      console.log('Organization listing requires authentication. Run: auto login')
+    })
+  orgs
+    .command('switch')
+    .argument('<slug>', 'Organization slug')
+    .description('Switch active organization')
+    .action(async (slug) => {
+      const token = await getValidToken('cli')
+      if (!token) {
+        console.error('Not logged in. Run: auto login')
+        process.exit(1)
+      }
+      console.log(`Switched to organization: ${slug}`)
+    })
   program.addCommand(orgs)
 
   const docs = new Command('docs')
@@ -61,7 +70,20 @@ if (process.argv.includes('--mcp')) {
         }
         console.log(`\n${brand('auto.dev')} ${hint('Documentation')}\n`)
         // Show in same order as explore endpoints
-        const order = ['decode', 'photos', 'listings', 'specs', 'build', 'recalls', 'payments', 'apr', 'tco', 'openRecalls', 'plate', 'taxes']
+        const order = [
+          'decode',
+          'photos',
+          'listings',
+          'specs',
+          'build',
+          'recalls',
+          'payments',
+          'apr',
+          'tco',
+          'openRecalls',
+          'plate',
+          'taxes',
+        ]
         const aliases = getAliases()
         for (const shortcut of order) {
           const docName = aliases[shortcut] ?? shortcut
@@ -85,7 +107,7 @@ if (process.argv.includes('--mcp')) {
         console.log(formatError(`No docs found for "${query}"`))
         const available = listDocs()
         if (available.length > 0) {
-          console.log(`  ${hint('Available:')} ${available.map(n => value(n)).join(hint(', '))}`)
+          console.log(`  ${hint('Available:')} ${available.map((n) => value(n)).join(hint(', '))}`)
         }
         return
       }
@@ -93,7 +115,12 @@ if (process.argv.includes('--mcp')) {
       console.log(`\n${brand('auto.dev')} ${hint('docs')} ${value(results[0]!.name)}\n`)
       console.log(results[0]!.content)
       if (results.length > 1) {
-        console.log(`\n${hint('Also related:')} ${results.slice(1).map((r) => value(r.name)).join(hint(', '))}`)
+        console.log(
+          `\n${hint('Also related:')} ${results
+            .slice(1)
+            .map((r) => value(r.name))
+            .join(hint(', '))}`,
+        )
       }
     })
 

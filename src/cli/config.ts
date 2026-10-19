@@ -3,8 +3,7 @@ import { loadConfig, saveConfig } from '../core/config'
 import { brand, formatSuccess, hint, label, value } from './colors'
 
 export function buildConfigCommand(): Command {
-  const config = new Command('config')
-    .description('Manage auto.dev CLI configuration')
+  const config = new Command('config').description('Manage auto.dev CLI configuration')
 
   config
     .command('set')

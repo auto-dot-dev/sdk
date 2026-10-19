@@ -28,7 +28,7 @@ export async function getValidToken(clientType: ClientType = 'cli'): Promise<str
   const tokenData = await storage.getTokenData()
   if (!tokenData?.accessToken) return null
 
-  const needsRefresh = tokenData.expiresAt && (tokenData.expiresAt - Date.now() < REFRESH_BUFFER_MS)
+  const needsRefresh = tokenData.expiresAt && tokenData.expiresAt - Date.now() < REFRESH_BUFFER_MS
 
   if (!needsRefresh) return tokenData.accessToken
 
@@ -50,7 +50,11 @@ export async function getValidToken(clientType: ClientType = 'cli'): Promise<str
 /**
  * Save token data after device flow login.
  */
-export async function saveTokenData(data: { access_token: string; refresh_token?: string; expires_in?: number }): Promise<void> {
+export async function saveTokenData(data: {
+  access_token: string
+  refresh_token?: string
+  expires_in?: number
+}): Promise<void> {
   await storage.setTokenData({
     accessToken: data.access_token,
     refreshToken: data.refresh_token,

@@ -130,15 +130,17 @@ export function makeCommand(def: CommandDef): Command {
 // ── Helpers (moved from commands.ts) ───────────────────────────────────
 
 export function colorizeJson(json: string): string {
-  return json
-    .replace(/"([^"]+)":/g, (_, key) => `${value(`"${key}"`)}:`)
-    .replace(/: "(https?:\/\/[^"]+)"/g, (_, url) => `: "${limeGreen(url)}"`)
-    // biome-ignore lint/suspicious/noControlCharactersInRegex: intentional — prevents re-colorizing ANSI-escaped strings
-    .replace(/: "([^"\x1b]*)"/g, (_, str) => `: ${brown(`"${str}"`)}`)
-    .replace(/: (-?\d+\.?\d*)(,?\n)/g, (_, num, end) => `: ${yellowNum(num)}${end}`)
-    .replace(/: (true|false)(,?\n)/g, (_, bool, end) => `: ${yellowNum(bool)}${end}`)
-    .replace(/: (null)(,?\n)/g, (_, nul, end) => `: ${yellowNum(nul)}${end}`)
-    .replace(/^(\s+)(-?\d+\.?\d*)(,?\n)/gm, (_, indent, num, end) => `${indent}${yellowNum(num)}${end}`)
+  return (
+    json
+      .replace(/"([^"]+)":/g, (_, key) => `${value(`"${key}"`)}:`)
+      .replace(/: "(https?:\/\/[^"]+)"/g, (_, url) => `: "${limeGreen(url)}"`)
+      // biome-ignore lint/suspicious/noControlCharactersInRegex: intentional — prevents re-colorizing ANSI-escaped strings
+      .replace(/: "([^"\x1b]*)"/g, (_, str) => `: ${brown(`"${str}"`)}`)
+      .replace(/: (-?\d+\.?\d*)(,?\n)/g, (_, num, end) => `: ${yellowNum(num)}${end}`)
+      .replace(/: (true|false)(,?\n)/g, (_, bool, end) => `: ${yellowNum(bool)}${end}`)
+      .replace(/: (null)(,?\n)/g, (_, nul, end) => `: ${yellowNum(nul)}${end}`)
+      .replace(/^(\s+)(-?\d+\.?\d*)(,?\n)/gm, (_, indent, num, end) => `${indent}${yellowNum(num)}${end}`)
+  )
 }
 
 export function formatOutput(data: unknown, format: string): string {
@@ -153,17 +155,11 @@ export function formatOutput(data: unknown, format: string): string {
     const hasNested = Object.values(data[0] as object).some((v) => typeof v === 'object' && v !== null)
     if (hasNested) return colorizeJson(JSON.stringify(data, null, 2))
     const keys = Object.keys(data[0] as object)
-    const allRows = (data as Record<string, unknown>[]).map((row) =>
-      keys.map((k) => String(row[k] ?? '')),
-    )
-    const colWidths = keys.map((k, i) =>
-      Math.max(k.length, ...allRows.map((r) => r[i]!.length)),
-    )
+    const allRows = (data as Record<string, unknown>[]).map((row) => keys.map((k) => String(row[k] ?? '')))
+    const colWidths = keys.map((k, i) => Math.max(k.length, ...allRows.map((r) => r[i]!.length)))
     const pad = (s: string, w: number) => s + ' '.repeat(Math.max(0, w - s.length))
     const header = keys.map((k, i) => label(pad(k, colWidths[i]!))).join('  ')
-    const body = allRows.map((row) =>
-      row.map((val, i) => pad(val, colWidths[i]!)).join('  '),
-    )
+    const body = allRows.map((row) => row.map((val, i) => pad(val, colWidths[i]!)).join('  '))
     return [header, ...body].join('\n')
   }
   return colorizeJson(JSON.stringify(data, null, 2))
