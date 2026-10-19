@@ -65,7 +65,8 @@ export const ENDPOINTS: Record<EndpointName, EndpointDefinition> = {
     method: 'GET',
     path: '/build/{vin}',
     tier: 'growth',
-    description: 'Get OEM build and trim data by VIN',
+    description:
+      'Get OEM build and trim data by VIN. A 207 answers with build null plus vehicle, catalog (what the style ships with) and reason when no record builds the VIN; a 200 may list missing[] fields.',
     vinRequired: true,
   },
   recalls: {

@@ -6,7 +6,8 @@ const commands: CommandDef[] = [
   { name: 'decode',       description: 'Decode a VIN — returns make, model, year, trim, engine, drivetrain' },
   { name: 'photos',       description: 'Get vehicle photos by VIN' },
   { name: 'specs',        description: 'Get detailed vehicle specifications by VIN' },
-  { name: 'build',        description: 'Get OEM build and trim data by VIN' },
+  { name: 'build',        description:
+      'Get OEM build and trim data by VIN. A 207 answers with build null plus vehicle, catalog (what the style ships with) and reason when no record builds the VIN; a 200 may list missing[] fields.' },
   { name: 'recalls',      description: 'Get safety recalls by VIN' },
   { name: 'open-recalls', description: 'Get open/unresolved recalls by VIN' },
 
