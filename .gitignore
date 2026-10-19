@@ -8,6 +8,7 @@ dist/
 
 # Local agent / tool artifacts
 CLAUDE.md
+.claude/
 node-compile-cache/
 update-check/
 playwright_chromiumdev_profile-*/

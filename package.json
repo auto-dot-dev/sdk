@@ -37,6 +37,7 @@
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "release": "pnpm version patch && git push --follow-tags && pnpm publish --access public",
     "prepublishOnly": "pnpm build:docs && pnpm build:docs-data && pnpm build"
   },
   "keywords": [
